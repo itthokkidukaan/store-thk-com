@@ -1,0 +1,44 @@
+<div class="card card-block">
+    <div id="notify" class="alert alert-success" style="display:none;">
+        <a href="#" class="close" data-dismiss="alert">&times;</a>
+
+        <div class="message"></div>
+    </div>
+    <form method="post" id="data_form" class="form-horizontal">
+        <div class="card-body">
+
+            <h5><?php echo $this->lang->line('Edit Transaction Category') ?></h5>
+            <hr>
+            <input type="hidden" name="catid" value="<?php echo $cat['id'] ?>">
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label"
+                       for="product_cat_name"><?php echo $this->lang->line('Category Name') ?></label>
+
+                <div class="col-sm-8">
+                      <select name="parent_category" class="form-control">                                       <option value='Assets' <?php if($cat['parent_cat']=='Assets'){echo 'selected';}?>><?php echo $this->lang->line('Assets') ?> - Assets</option>                    <option value='Expenses' <?php if($cat['parent_cat']=='Expenses'){echo 'selected';}?> ><?php echo $this->lang->line('Expenses') ?> - Expenses</option>                    <option value='Income' <?php if($cat['parent_cat']=='Income'){echo 'selected';}?> ><?php echo $this->lang->line('Income') ?> - Income</option>                    <option value='Liabilities' <?php if($cat['parent_cat']=='Liabilities'){echo 'selected';}?> ><?php echo $this->lang->line('Liabilities') ?> - Liabilities</option>                    <option value='Equity' <?php if($cat['parent_cat']=='Equity'){echo 'selected';}?> ><?php echo $this->lang->line('Equity') ?> - Equity</option>                </select>
+                </div>
+            </div>   												<div class="form-group row">
+                <label class="col-sm-2 col-form-label"
+                       for="product_cat_name">Sub Category</label>
+
+                <div class="col-sm-8">
+                    <input type="text"
+                           class="form-control margin-bottom  required" name="cat_name"
+                           value="<?php echo $cat['name'] ?>">
+                </div>
+            </div>
+
+            <div class="form-group row">
+
+                <label class="col-sm-2 col-form-label"></label>
+
+                <div class="col-sm-4">
+                    <input type="submit" id="submit-data" class="btn btn-success margin-bottom"
+                           value="<?php echo $this->lang->line('Update') ?>" data-loading-text="Updating...">
+                    <input type="hidden" value="transactions/editcatsave" id="action-url">
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>

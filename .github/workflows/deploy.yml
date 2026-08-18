@@ -1,0 +1,36 @@
+name: Deploy to AlmaLinux VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /home/demostorethokkid/public_html
+
+            echo "Pulling latest code..."
+            git pull origin main
+
+            echo "Fix permissions..."
+            chown -R demostorethokkid:demostorethokkid .
+
+            echo "Busting PHP OPcache (touch all PHP files so timestamp-based invalidation picks up the changes)..."
+            find . -name "*.php" -exec touch {} \;
+
+            echo "Restarting PHP-FPM if present (best effort, won't fail the deploy if not permitted)..."
+            for svc in $(systemctl list-units --type=service --all --no-legend 2>/dev/null | awk '{print $1}' | grep -i 'php.*fpm'); do
+              sudo systemctl restart "$svc" 2>/dev/null || true
+            done
+
+            echo "Done"

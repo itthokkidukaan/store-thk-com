@@ -1,0 +1,604 @@
+[
+    {
+        "id": "",
+        "name": "edit_product_id",
+        "value": "1840",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "seller_id",
+        "value": "29",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "subcategory_id_js",
+        "name": "",
+        "value": "",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "pro_input_image",
+        "name": "pro_input_image",
+        "value": "uploads/media/2026/istockphoto-184276818-612x612.jpg",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "product_type",
+        "value": "variable_product",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "variant_stock_status",
+        "value": "0",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "variant_stock_level_type",
+        "value": "variable_level",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "simple_product_stock_status",
+        "value": "",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "pro_input_text",
+        "name": "pro_input_name",
+        "value": "Apple",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "category_id",
+        "name": "category_id",
+        "value": "245",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "total_stock",
+        "name": "product_total_stock",
+        "value": "200.00",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "total_allowed_quantity",
+        "name": "total_allowed_quantity",
+        "value": "100",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "total_required_quantity",
+        "name": "total_required_quantity",
+        "value": "0",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "purchaseprice",
+        "name": "purchaseprice",
+        "value": "1.00",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "purchase_price_per",
+        "name": "purchase_price_per",
+        "value": "Kilogram",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "products_id",
+        "value": "1840",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "row_id[]",
+        "value": "211",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "printname[]",
+        "value": "Apple",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "article[]",
+        "value": "A101",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "hpnumber[]",
+        "value": "1001",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "attr[]",
+        "value": "Kilogram",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "uom[]",
+        "value": "1Kg",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "quantity_1",
+        "name": "",
+        "value": "1Kg",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "variants_ids[]",
+        "value": "1",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "edit_variant_id[]",
+        "value": "2505",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "purchase_price_1",
+        "name": "purchase_price[]",
+        "value": "2",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "packing_price_1",
+        "name": "packing_price[]",
+        "value": "10.00",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "margin_type_1",
+        "name": "margin_type[]",
+        "value": "Fixed",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "user_percent_1",
+        "name": "margin_percent[]",
+        "value": "0",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "disc_percent_1",
+        "name": "disc_percent[]",
+        "value": "0",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "price_1",
+        "name": "variant_price[]",
+        "value": "12.00",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "disc_price_1",
+        "name": "variant_special_price[]",
+        "value": "12.00",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "variant_sku[]",
+        "value": "apple-1Kg-0B7AP4",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "variant_total_stock[]",
+        "value": "100",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "variant_level_stock_status[]",
+        "value": "1",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "row_id[]",
+        "value": "212",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "printname[]",
+        "value": "AppleSecond",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "article[]",
+        "value": "A102",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "hpnumber[]",
+        "value": "1002",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "attr[]",
+        "value": "Kilogram",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "uom[]",
+        "value": "2Kg",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "quantity_2",
+        "name": "",
+        "value": "2Kg",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "variants_ids[]",
+        "value": "2",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "edit_variant_id[]",
+        "value": "2506",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "purchase_price_2",
+        "name": "purchase_price[]",
+        "value": "3",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "packing_price_2",
+        "name": "packing_price[]",
+        "value": "10.00",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "margin_type_2",
+        "name": "margin_type[]",
+        "value": "Fixed",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "user_percent_2",
+        "name": "margin_percent[]",
+        "value": "0",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "disc_percent_2",
+        "name": "disc_percent[]",
+        "value": "0",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "price_2",
+        "name": "variant_price[]",
+        "value": "13.00",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "disc_price_2",
+        "name": "variant_special_price[]",
+        "value": "13.00",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "variant_sku[]",
+        "value": "apple-2Kg-E5EF9G",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "variant_total_stock[]",
+        "value": "100",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "variant_level_stock_status[]",
+        "value": "1",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "seller_id",
+        "name": "seller_id",
+        "value": "29",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "short_description",
+        "name": "short_description",
+        "value": "Apple",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "pro_input_tax",
+        "value": "1",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "indicator",
+        "value": "0",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "country_list",
+        "name": "made_in",
+        "value": "",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "minimum_order_quantity",
+        "value": "1",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "quantity_step_size",
+        "value": "1",
+        "type": "number",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "warranty_period",
+        "value": "",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "guarantee_period",
+        "value": "",
+        "type": "text",
+        "visible": true
+    },
+    {
+        "id": "deliverable_type",
+        "name": "deliverable_type",
+        "value": "1",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "deliverable_zipcodes",
+        "name": "deliverable_zipcodes[]",
+        "value": [],
+        "type": "select-multiple",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "",
+        "value": "",
+        "type": "search",
+        "visible": true
+    },
+    {
+        "id": "is_prices_inclusive_tax",
+        "name": "is_prices_inclusive_tax",
+        "value": "on",
+        "type": "checkbox",
+        "visible": true
+    },
+    {
+        "id": "cod_allowed",
+        "name": "cod_allowed",
+        "value": "on",
+        "type": "checkbox",
+        "visible": true
+    },
+    {
+        "id": "is_returnable",
+        "name": "is_returnable",
+        "value": "on",
+        "type": "checkbox",
+        "visible": true
+    },
+    {
+        "id": "is_cancelable",
+        "name": "is_cancelable",
+        "value": "on",
+        "type": "checkbox",
+        "visible": true
+    },
+    {
+        "id": "",
+        "name": "cancelable_till",
+        "value": "received",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "video_type",
+        "name": "video_type",
+        "value": "",
+        "type": "select-one",
+        "visible": true
+    },
+    {
+        "id": "video",
+        "name": "video",
+        "value": "",
+        "type": "text",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "",
+        "value": "",
+        "type": "select-one",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "product_type__ignore",
+        "value": "variable_product",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "simple_product_stock_status__ignore",
+        "value": "",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "variant_stock_level_type__ignore",
+        "value": "variant_level",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "variant_stock_status__ignore",
+        "value": "0",
+        "type": "hidden",
+        "visible": false
+    },
+    {
+        "id": "product-type",
+        "name": "type",
+        "value": "variable_product",
+        "type": "select-one",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "variant_stock_management_status",
+        "value": "on",
+        "type": "checkbox",
+        "visible": false
+    },
+    {
+        "id": "stock_level_type",
+        "name": "",
+        "value": "variable_level",
+        "type": "select-one",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "sku_variant_type",
+        "value": "",
+        "type": "text",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "total_stock_variant_type",
+        "value": "200",
+        "type": "number",
+        "visible": false
+    },
+    {
+        "id": "stock_status_variant_type",
+        "name": "variant_status",
+        "value": "1",
+        "type": "select-one",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "",
+        "value": "on",
+        "type": "checkbox",
+        "visible": false
+    },
+    {
+        "id": "",
+        "name": "pro_input_description",
+        "value": "",
+        "type": "textarea",
+        "visible": true
+    }
+]

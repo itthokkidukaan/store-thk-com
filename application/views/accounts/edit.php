@@ -1,0 +1,69 @@
+<div class="content-body">
+    <div class="card">
+        <div class="card-header">
+            <h4><?php echo $this->lang->line('Edit') ?> <?php echo $this->lang->line('Accounts') ?></h4>
+            <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+            <div class="heading-elements">
+                <ul class="list-inline mb-0">
+                    <li><a data-action="collapse"><i class="ft-minus"></i></a></li>
+                    <li><a data-action="expand"><i class="ft-maximize"></i></a></li>
+                    <li><a data-action="close"><i class="ft-x"></i></a></li>
+                </ul>
+            </div>
+        </div>
+        <hr>
+        <div class="card-content">
+            <div id="notify" class="alert alert-success" style="display:none;">
+                <a href="#" class="close" data-dismiss="alert">&times;</a>
+                <div class="message"></div>
+            </div>
+            <div class="card-body">
+                <?php if (!empty($account['id'])) { ?>
+                <form method="post" id="data_form">
+                    <input type="hidden" name="acid" value="<?php echo $account['id'] ?>">
+                    <div class="form-group row">
+                        <div class="col-sm-6">
+                            <label class="col-form-label"><?php echo $this->lang->line('Account No') ?> <span style="color: red;">*</span></label>
+                            <input type="text" class="form-control required" name="accno" value="<?php echo $account['acn'] ?>">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="col-form-label"><?php echo $this->lang->line('Name') ?> <span style="color: red;">*</span></label>
+                            <input type="text" class="form-control required" name="holder" value="<?php echo $account['holder'] ?>">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-sm-6">
+                            <label class="col-form-label"><?php echo $this->lang->line('Code') ?></label>
+                            <input type="text" class="form-control" name="acode" value="<?php echo $account['code'] ?>">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="col-form-label">Adjust Balance</label>
+                            <input type="text" class="form-control" name="balance" placeholder="Leave blank to keep current balance" onkeypress="return isNumber(event)">
+                        </div>
+                    </div>
+                    <?php if (count($locations) > 1) { ?>
+                    <div class="form-group row">
+                        <div class="col-sm-6">
+                            <label class="col-form-label"><?php echo $this->lang->line('Location') ?></label>
+                            <select name="lid" class="form-control">
+                                <?php foreach ($locations as $row) { ?>
+                                    <option value="<?php echo $row['id'] ?>" <?php echo $row['id'] == $account['loc'] ? 'selected' : '' ?>><?php echo $row['cname'] ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+                    <?php } ?>
+                    <div class="form-group row">
+                        <div class="col-sm-4">
+                            <input type="submit" id="submit-data" class="btn btn-success btn-lg margin-bottom" value="<?php echo $this->lang->line('Update') ?>" data-loading-text="Please Wait...">
+                            <input type="hidden" value="accounts/editacc" id="action-url">
+                        </div>
+                    </div>
+                </form>
+                <?php } else { ?>
+                    <div class="alert alert-warning">Account not found.</div>
+                <?php } ?>
+            </div>
+        </div>
+    </div>
+</div>

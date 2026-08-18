@@ -1,0 +1,12 @@
+application/config/database.php
+application/config/config.php
+error_log
+userfiles/temp/pdf/mpdf/ttfontdata/
+error_log
+userfiles/temp/pdf/mpdf/ttfontdata/
+error_log
+key
+key.pub
+key.txt
+.htaccess
+

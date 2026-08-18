@@ -1,0 +1,288 @@
+<?php
+
+defined('BASEPATH') or exit('No direct script access allowed');
+
+class Dashboard extends CI_Controller
+{
+
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library("Aauth");
+        if (!$this->aauth->is_loggedin()) {
+            redirect('/user/', 'refresh');
+            exit;
+        }
+
+        $this->load->model('dashboard_model');
+        $this->load->model('accounts_model', 'accounts');
+        $this->load->model('Home_model');
+        $this->load->model('tools_model');
+		 $this->load->model('transactions_model', 'transactions');
+
+    }
+
+
+    public function index()
+    {
+       $today = date("Y-m-d");
+        $month = date("m");
+        $year = date("Y");
+       
+        if ($this->aauth->get_user()->roleid < 5) {
+            $data['todayin'] = $this->dashboard_model->todayInvoice($today);
+            $data['todayprofit'] = $this->dashboard_model->todayProfit($today);
+            $data['incomechart'] = $this->dashboard_model->incomeChart($today, $month, $year);
+            $data['expensechart'] = $this->dashboard_model->expenseChart($today, $month, $year);
+            $data['countmonthlychart'] = $this->dashboard_model->countmonthlyChart();
+            $data['monthin'] = $this->dashboard_model->monthlyInvoice($month, $year);
+            $data['todaysales'] = $this->dashboard_model->todaySales($today);
+            $data['monthsales'] = $this->dashboard_model->monthlySales($month, $year);
+            $data['todayinexp'] = $this->dashboard_model->todayInexp($today);
+                $data['todayinsell'] = $this->dashboard_model->todayInexsell($today);
+                $data['thismontsell'] = $this->dashboard_model->thismontsell($month, $year);
+                $data['thismontpurc'] = $this->dashboard_model->thismontpurc($month, $year);
+                $data['thismontpurcvalue'] = $this->dashboard_model->thismontpurchasevlue($month, $year);
+                $data['wastage'] = $this->dashboard_model->thismonthwastage($month, $year);
+                $data['summary'] = get_inventory_summary();
+				
+				 // $data['accounts'] = $this->accounts->accountslist();
+                $data['todayexpens'] = $this->dashboard_model->todayexpens($today);
+            $data['recent_payments'] = $this->dashboard_model->recent_payments();
+            $data['tasks'] = $this->dashboard_model->tasks($this->aauth->get_user()->id);
+            $data['recent'] = $this->dashboard_model->recentInvoices();
+            $data['balance'] = $this->accounts->account_dash();
+            $data['recent_buy'] = $this->dashboard_model->recentBuyers();
+            $data['goals'] = $this->tools_model->goals(1);
+            $data['stock'] = $this->dashboard_model->warehouse();
+			
+
+            $head['usernm'] = $this->aauth->get_user()->username;
+			$data['order_counter'] = $this->Home_model->count_new_orders('POS');
+			$data['order_online'] = $this->Home_model->count_new_orders('0');
+			$data['stock_values'] = get_stock_total_values_live();
+			
+			
+			$data['total_expense'] = get_total_expense_current_month();
+            $data['user_counter'] = $this->Home_model->count_new_users();
+ $data['accounts'] = $this->transactions->acc_list();
+            $data['delivery_boy_counter'] = $this->Home_model->count_delivery_boys();
+
+            $data['product_counter'] = $this->Home_model->count_products();
+            $head['title'] = 'Dashboard';
+            $this->load->view('fixed/header', $head);
+            $this->load->view('dashboard', $data);
+            $this->load->view('fixed/footer');
+        } else if ($this->aauth->premission(4)) {
+            $this->load->model('projects_model', 'projects');
+            $head['usernm'] = $this->aauth->get_user()->username;
+            $head['title'] = 'Project List';
+            $data['totalt'] = $this->projects->project_count_all();
+
+            $this->load->view('fixed/header', $head);
+            $this->load->view('projects/index', $data);
+            $this->load->view('fixed/footer');
+        } else if ($this->aauth->get_user()->roleid == 1) {
+            $head['title'] = "Products";
+            $head['usernm'] = $this->aauth->get_user()->username;
+            $this->load->view('fixed/header', $head);
+            $this->load->view('products/products');
+            $this->load->view('fixed/footer');
+        } else {
+            $head['title'] = "Manage Invoices";
+            $head['usernm'] = $this->aauth->get_user()->username;
+            $this->load->view('fixed/header', $head);
+            $this->load->view('invoices/invoices');
+            $this->load->view('fixed/footer');
+        }
+    }
+	
+	
+	
+	public function filter_report()
+{
+    $start_date = $this->input->post('start_date');
+    $end_date = $this->input->post('end_date');
+
+    // Format start and end date
+    $start_date = date('Y-m-d', strtotime($start_date));
+    $end_date = date('Y-m-d', strtotime($end_date));
+
+    $user = $this->aauth->get_user();
+
+    // Total Sales
+    $this->db->select('SUM(final_total) as credit');
+    $this->db->where("DATE(date_added) BETWEEN '$start_date' AND '$end_date'");
+    if ($user->roleid != 1) {
+        $this->db->where('created_by', $user->id);
+    }
+    $this->db->where('orders.is_deleted', 0);
+    $this->db->from('orders');
+    $sales = $this->db->get()->row_array();
+
+    // Total Purchase
+    $this->db->select('SUM(total) as credit');
+    $this->db->where("DATE(invoicedate) BETWEEN '$start_date' AND '$end_date'");
+    if ($user->roleid != 1) {
+        $this->db->where('eid', $user->id);
+    }
+    $this->db->from('geopos_purchase');
+    $purchase = $this->db->get()->row_array();
+
+
+
+    // Total Expenses
+    $this->db->select('SUM(debit) as total_expense');
+    $this->db->where("DATE(date) BETWEEN '$start_date' AND '$end_date'");
+    if ($user->roleid != 1) {
+        $this->db->where('payerid', $user->id);
+    }
+    $this->db->where('type', 'Expense');
+    $this->db->from('geopos_transactions');
+    $expenses = $this->db->get()->row();
+
+    // Total Stock Value (No date filter, assuming static)
+  /*   $this->db->select('SUM(product_price * stock) as total_purchase_value');
+    $this->db->from('products');
+    $stock = $this->db->get()->row(); */
+	
+	
+	$loc_where = '';
+if ($this->aauth->get_user()->loc) {
+    $loc_where = ' WHERE c.loc=' . $this->aauth->get_user()->loc;
+    if (BDATA) $loc_where = ' WHERE c.loc=' . $this->aauth->get_user()->loc . ' OR c.loc=0';
+} elseif (!BDATA) {
+    $loc_where = ' WHERE c.loc=0';
+}
+
+// Current month range
+/* $start_date = date('Y-m-01 00:00:00'); // First day of month
+$end_date = date('Y-m-d 23:59:59');    // Today
+ */
+ 
+   $wheres = ' WHERE  c.id=1';
+    if ($this->aauth->get_user()->loc) {
+        //$where = ' WHERE c.loc=' . $this->aauth->get_user()->loc;
+        $where = ' WHERE c.id=1';
+      //  if (BDATA) $where = ' WHERE c.loc=' . $this->aauth->get_user()->loc . ' OR c.loc=0';
+        if (BDATA) $where = ' WHERE c.id=1 OR c.id=1';
+    } elseif (!BDATA) {
+        $where = ' WHERE  c.id=1';
+    }
+	
+/* $query = $this->db->query("SELECT 
+            c.*, 
+            p.pc, 
+            p.salessum, 
+            p.worthsum, 
+            p.qty 
+        FROM 
+            geopos_warehouse AS c 
+        LEFT JOIN (
+            SELECT 
+                pr.warehouse,
+                COUNT(pr.id) AS pc,
+                SUM(pr.product_price * IFNULL(pl.balance, 0)) AS salessum,
+                SUM(pr.purchase_price * IFNULL(pl.balance, 0)) AS worthsum,
+                SUM(IFNULL(pl.balance, 0)) AS qty
+            FROM 
+                products pr
+            LEFT JOIN (
+                SELECT 
+                    product_id,
+                    SUM(purchage_qty) - SUM(sell_qty) - SUM(wastage) AS balance
+                FROM 
+                    product_ledger
+                WHERE 
+                    created_date >= '$start_date' AND created_date <= '$end_date'
+                GROUP BY product_id
+            ) AS pl ON pr.id = pl.product_id
+            GROUP BY pr.warehouse
+        ) AS p ON c.id = p.warehouse
+        $wheres"); */
+		
+		
+		$query = $this->db->query("SELECT 
+            c.*, 
+            p.pc, 
+            p.salessum, 
+            p.worthsum, 
+            p.qty 
+        FROM 
+            geopos_warehouse AS c 
+        LEFT JOIN (
+            SELECT 
+                pr.warehouse,
+                COUNT(pr.id) AS pc,
+                SUM(pr.product_price * IFNULL(pl.balance, 0)) AS salessum,
+                SUM(pr.purchase_price * IFNULL(pl.balance, 0)) AS worthsum,
+                SUM(IFNULL(pl.balance, 0)) AS qty
+            FROM 
+                products pr
+            LEFT JOIN (
+                SELECT 
+                    product_id,
+                    SUM(purchage_qty) - SUM(sell_qty) AS balance
+                FROM 
+                    product_ledger
+                WHERE 
+                    created_date >= '$start_date' AND created_date <= '$end_date'
+                GROUP BY product_id
+            ) AS pl ON pr.id = pl.product_id
+            GROUP BY pr.warehouse
+        ) AS p ON c.id = p.warehouse
+        $wheres");
+
+$stock = $query->row_array();
+
+
+
+
+
+$query = $this->db->query("SELECT SUM( oi.quantity * ( SELECT gpi.price FROM geopos_purchase_items gpi JOIN geopos_purchase gp ON gp.id = gpi.tid WHERE (gpi.product = oi.product_name OR gpi.pid = oi.product_id) AND gp.invoicedate <= DATE(o.date_added) AND gpi.price > 0 ORDER BY gp.invoicedate DESC LIMIT 1 ) ) AS purchase_price FROM order_items oi LEFT JOIN products p ON p.name = oi.product_name JOIN orders o ON o.id = oi.order_id WHERE o.date_added BETWEEN '$start_date' AND '$end_date'; ");
+
+$summery = $query->row_array();
+
+//echo $stock['worthsum'];
+
+
+
+
+    $response = [
+        'total_sales' => amountExchange($sales['credit'], 0, $user->loc),
+        'total_purchase' => amountExchange($purchase['credit'], 0, $user->loc),
+        'total_gp' => amountExchange($sales['credit'] - $purchase['credit'], 0, $user->loc),
+        'total_expense' => amountExchange($expenses->total_expense, 0, $user->loc),
+        'total_stock' => amountExchange($stock['worthsum'], 0, $user->loc),
+        'purchase_value' => amountExchange($summery['purchase_price'], 0, $user->loc),
+        'total_np' => amountExchange($sales['credit'] - $purchase['credit'] - $expenses->total_expense, 0, $user->loc),
+        'totalgp' => amountExchange($sales['credit'] - $summery['purchase_price'], 0, $user->loc)
+    ];
+
+    echo json_encode($response);
+}
+
+
+    public function clock_in()
+    {
+        $id = $this->aauth->get_user()->id;
+        if ($this->aauth->auto_attend()) {
+            $this->dashboard_model->clockin($id);
+        }
+
+        redirect('dashboard');
+    }
+
+    public function clock_out()
+    {
+        $id = $this->aauth->get_user()->id;
+
+        if ($this->aauth->auto_attend()) {
+            $this->dashboard_model->clockout($id);
+        }
+
+
+        redirect('dashboard');
+    }
+}

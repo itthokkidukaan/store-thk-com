@@ -1,0 +1,143 @@
+<style>
+    .abelText {
+         margin-top: 40px;
+    }
+    .abelTextRemove {
+        margin-top: 35px;
+    }
+    .add_field_button {
+        color: white !important;
+    }
+    .add-more-note {
+        margin-left: -120px !important;
+    }
+</style>
+<div class="content-body">
+
+    <div class="card card-block bg-white">
+        <div id="notify" class="alert alert-success" style="display:none;">
+            <a href="#" class="close" data-dismiss="alert">&times;</a>
+
+            <div class="message"></div>
+        </div>
+        <form method="post" id="data_form" class="card-body">
+
+
+            <h5><?php echo $this->lang->line('Permission Details') ?> </h5>
+            <hr>
+            <div class="" id="input_fields_wrap">
+                <div class="form-group row">
+                    <div class="col-sm-4">
+                        <label class="form-label"
+                        for="name"><?php echo $this->lang->line('GroupName') ?>
+                        </label>
+                        <input type="text"
+                            class="form-control margin-bottom required" name="group_name" id="group_name"
+                            placeholder="group name">
+                    </div>
+                    <div class="col-sm-8">
+                        <label class="form-label abelText"></label>
+                        <span class="form-control-note"><strong>Note: [ Example:</strong> Demo or Some Name <strong>Like:</strong> Dashboard, Sales, Stock,Project etc ]</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-form-label"
+                        for="name"><?php echo $this->lang->line('Name') ?>
+                        </label>
+                        <input type="text"
+                            class="form-control margin-bottom required" name="name[]" id="name"
+                            placeholder="name">
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="form-label abelText"></label>
+                        <a class="btn btn btn-dark btn-sm add_field_button">
+                        <?php echo $this->lang->line('AddMore');?>
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label abelText"></label>
+                        <span class="form-control-note add-more-note"><strong>Note: </strong>[<strong>Like:</strong> Dashboard-View, New-Invoice, Manage-Invoice etc ]</span>
+                    </div>
+                </div>
+                
+            </div>
+            
+            
+           
+           
+            <div class="form-group row">
+
+                <div class="col-sm-4">
+                    <input type="submit" id="submit-data" class="btn btn-success margin-bottom"
+                           value="Save"
+                           data-loading-text="Adding...">
+                    <input type="hidden" value="permission/submit_permission" id="action-url">
+                </div>
+            </div>
+
+
+        </form>
+    </div>
+
+</div>
+
+
+<script>
+    $(function(){
+        var wrapper         = $("#input_fields_wrap"); //Fields wrapper
+        var add_button      = $(".add_field_button"); //Add button ID
+        var i = 1;
+        $(add_button).click(function(e){ //on add input button click
+            e.preventDefault();
+            
+           $(wrapper).append('<div class="" id="input_fields_wrap_'+i+'"><div class="form-group row"><div class="col-sm-4"><label class="form-label"></label><input type="text" class="form-control margin-bottom required" name="name[]" id="name_'+i+'" placeholder="name"></div><div class="col-sm-2"><label class="form-label abelTextRemove"></label><a href="javascript:void(0)" class="btn btn-danger btn-sm remove_field" data-no="'+i+'">Remove</a></div></div></div>');
+            // $("#name_"+i).prop("required", "true");    
+            i++;
+        });
+        $(wrapper).on("click",".remove_field", function(e){ //user click on remove text
+            e.preventDefault(); 
+            var num = $(this).attr('data-no');
+            $('#input_fields_wrap_'+num).remove();
+            // $('#name_'+num).prop("required", "false");
+        })
+    });
+</script>
+
+
+<script type="text/javascript">
+    $("#profile_add").click(function (e) {
+        e.preventDefault();
+        var actionurl = baseurl + 'user/submit_user';
+        actionProduct1(actionurl);
+    });
+</script>
+
+<script>
+
+    function actionProduct1(actionurl) {
+
+        $.ajax({
+
+            url: actionurl,
+            type: 'POST',
+            data: $("#product_action").serialize(),
+            dataType: 'json',
+            success: function (data) {
+                $("#notify .message").html("<strong>" + data.status + "</strong>: " + data.message);
+                $("#notify").removeClass("alert-warning").addClass("alert-success").fadeIn();
+
+
+                $("html, body").animate({scrollTop: $('html, body').offset().top}, 200);
+                $("#product_action").remove();
+            },
+            error: function (data) {
+                $("#notify .message").html("<strong>" + data.status + "</strong>: " + data.message);
+                $("#notify").removeClass("alert-success").addClass("alert-warning").fadeIn();
+                $("html, body").animate({scrollTop: $('#notify').offset().top}, 1000);
+
+            }
+
+        });
+
+
+    }
+</script>
