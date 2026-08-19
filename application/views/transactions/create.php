@@ -1,11 +1,14 @@
 <div class="content-body">
     <!-- Modal Popup for Initial Transaction -->
-    <div class="modal fade" id="initialPopup" tabindex="-1" role="dialog" aria-labelledby="popupTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal fade" id="initialPopup" tabindex="-1" role="dialog" aria-labelledby="popupTitle" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <form id="initial-form">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title">Today Received Amount</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
@@ -57,6 +60,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-success">Submit</button>
                     </div>
                 </div>
@@ -99,9 +103,9 @@ foreach ($accounts as $acc) {
                         <div class="col-sm-6">
                             <label class="col-form-label">From Account / Sender</label>
                             <select name="pay_acc" class="form-control">
-                                <?php foreach ($accounts as $row) { 
+                                <?php foreach ($accounts as $row) {
                                     if ($row['account_type'] == 'Basic') {
-                                        if($this->aauth->get_user()->roleid == 1){
+                                        if((function_exists('is_seller_user') && is_seller_user()) || $this->aauth->get_user()->roleid == 1){
                                             echo "<option value='{$row['id']}'>{$row['acn']} - {$row['holder']} - ( ₹ {$row['lastbal']})</option>";
                                         } else {
                                             if($row['employeeID'] == $this->aauth->get_user()->id){

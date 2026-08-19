@@ -27,6 +27,18 @@ class Purchase extends CI_Controller
 
     }
 
+    private function get_purchase_sellers()
+    {
+        $this->db->select(' u.username as seller_name,u.id as seller_id, u.mobile, sd.category_ids,sd.id as seller_data_id  ')
+            ->join('users_groups ug', ' ug.user_id = u.id ')
+            ->join('seller_data sd', ' sd.user_id = u.id ')
+            ->where(['ug.group_id' => '4'])->where(['u.active' => '1']);
+        if (function_exists('is_seller_user') && is_seller_user()) {
+            $this->db->where('u.id', (int)$this->session->userdata('user_id'));
+        }
+        return $this->db->get('users u')->result_array();
+    }
+
     //create invoice
     public function create()
     {
@@ -38,11 +50,7 @@ class Purchase extends CI_Controller
         $data['currency'] = $this->purchase->currencies();
         $this->load->model('customers_model', 'customers');
         $data['customergrouplist'] = $this->customers->group_list();
-           $data['sellers'] = $this->db->select(' u.username as seller_name,u.id as seller_id, u.mobile, sd.category_ids,sd.id as seller_data_id  ')
-            ->join('users_groups ug', ' ug.user_id = u.id ')
-            ->join('seller_data sd', ' sd.user_id = u.id ')
-            ->where(['ug.group_id' => '4'])->where(['u.active' => '1'])
-            ->get('users u')->result_array();
+           $data['sellers'] = $this->get_purchase_sellers();
 		
         $data['lastinvoice'] = $this->purchase->lastpurchase();
         $data['terms'] = $this->purchase->billingterms();
@@ -66,11 +74,7 @@ class Purchase extends CI_Controller
         $data['currency'] = $this->purchase->currencies();
         $this->load->model('customers_model', 'customers');
         $data['customergrouplist'] = $this->customers->group_list();
-           $data['sellers'] = $this->db->select(' u.username as seller_name,u.id as seller_id, u.mobile, sd.category_ids,sd.id as seller_data_id  ')
-            ->join('users_groups ug', ' ug.user_id = u.id ')
-            ->join('seller_data sd', ' sd.user_id = u.id ')
-            ->where(['ug.group_id' => '4'])->where(['u.active' => '1'])
-            ->get('users u')->result_array();
+           $data['sellers'] = $this->get_purchase_sellers();
 		
         $data['lastinvoice'] = $this->purchase->lastpurchase();
         $data['terms'] = $this->purchase->billingterms();

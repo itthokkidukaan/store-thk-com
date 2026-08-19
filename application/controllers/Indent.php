@@ -41,6 +41,17 @@ $this->load->model('purchase_model', 'purchase');
 
 
 
+    // Returns the logged-in seller's user id, or 0 for admin (no filtering).
+    private function _current_seller_id()
+    {
+        if (function_exists('is_seller_user') && is_seller_user()) {
+            return (int)$this->session->userdata('user_id');
+        }
+        return 0;
+    }
+
+
+
     //create invoice
 
     public function create()
@@ -528,7 +539,7 @@ $data['totalchalan'] = ($this->uri->segment(5)) ? $this->uri->segment(5) : 0;
         $head['title'] = "indent #" . $date;
 
         $head['usernm'] = $this->aauth->get_user()->username;
-		 $data['quote_items'] = $this->quote->get_quote_items_by_date($date);
+		 $data['quote_items'] = $this->quote->get_quote_items_by_date($date, $this->_current_seller_id());
 
 
         $this->load->view('fixed/header', $head);
@@ -553,16 +564,11 @@ $data['totalchalan'] = ($this->uri->segment(5)) ? $this->uri->segment(5) : 0;
         $data['currency'] = $this->purchase->currencies();
         $this->load->model('customers_model', 'customers');
         $data['customergrouplist'] = $this->customers->group_list();
-           $data['sellers'] = $this->db->select(' u.username as seller_name,u.id as seller_id, u.mobile, sd.category_ids,sd.id as seller_data_id  ')
-            ->join('users_groups ug', ' ug.user_id = u.id ')
-            ->join('seller_data sd', ' sd.user_id = u.id ')
-            ->where(['ug.group_id' => '4'])->where(['u.active' => '1'])
-            ->get('users u')->result_array();
-		
+
         $data['lastinvoice'] = $this->purchase->lastpurchase();
         $data['terms'] = $this->purchase->billingterms();
-   
-      
+
+
         $data['warehouse'] = $this->purchase->warehouses();
         $data['taxdetails'] = $this->common->taxdetail();
 
@@ -592,8 +598,25 @@ $data['totalchalan'] = ($this->uri->segment(5)) ? $this->uri->segment(5) : 0;
         $head['title'] = "indent #" . $date;
 
         $head['usernm'] = $this->aauth->get_user()->username;
-		 $data['quote_items'] = $this->quote->get_quote_items_by_date($date);
+		 $data['quote_items'] = $this->quote->get_quote_items_by_date($date, $this->_current_seller_id());
 
+        // "Related" sellers/suppliers = only the ones whose products actually
+        // appear in this batch of indent items, not every seller in the system.
+        $related_seller_ids = array_values(array_unique(array_filter(
+            array_map(function ($item) { return (int)($item['seller_id'] ?? 0); }, $data['quote_items'])
+        )));
+        $data['related_seller_ids'] = $related_seller_ids;
+
+        $sellers_query = $this->db->select(' u.username as seller_name,u.id as seller_id, u.mobile, sd.category_ids,sd.id as seller_data_id  ')
+            ->join('users_groups ug', ' ug.user_id = u.id ')
+            ->join('seller_data sd', ' sd.user_id = u.id ')
+            ->where(['ug.group_id' => '4'])->where(['u.active' => '1']);
+        if (!empty($related_seller_ids)) {
+            $sellers_query->where_in('u.id', $related_seller_ids);
+        } elseif ($this->_current_seller_id()) {
+            $sellers_query->where('u.id', $this->_current_seller_id());
+        }
+        $data['sellers'] = $sellers_query->get('users u')->result_array();
 
         $this->load->view('fixed/header', $head);
 
@@ -617,16 +640,19 @@ $data['totalchalan'] = ($this->uri->segment(5)) ? $this->uri->segment(5) : 0;
         $data['currency'] = $this->purchase->currencies();
         $this->load->model('customers_model', 'customers');
         $data['customergrouplist'] = $this->customers->group_list();
-           $data['sellers'] = $this->db->select(' u.username as seller_name,u.id as seller_id, u.mobile, sd.category_ids,sd.id as seller_data_id  ')
+           $sellers_query = $this->db->select(' u.username as seller_name,u.id as seller_id, u.mobile, sd.category_ids,sd.id as seller_data_id  ')
             ->join('users_groups ug', ' ug.user_id = u.id ')
             ->join('seller_data sd', ' sd.user_id = u.id ')
-            ->where(['ug.group_id' => '4'])->where(['u.active' => '1'])
-            ->get('users u')->result_array();
-		
+            ->where(['ug.group_id' => '4'])->where(['u.active' => '1']);
+        if ($this->_current_seller_id()) {
+            $sellers_query->where('u.id', $this->_current_seller_id());
+        }
+        $data['sellers'] = $sellers_query->get('users u')->result_array();
+
         $data['lastinvoice'] = $this->purchase->lastpurchase();
         $data['terms'] = $this->purchase->billingterms();
-   
-      
+
+
         $data['warehouse'] = $this->purchase->warehouses();
         $data['taxdetails'] = $this->common->taxdetail();
 
@@ -656,7 +682,7 @@ $data['totalchalan'] = ($this->uri->segment(5)) ? $this->uri->segment(5) : 0;
         $head['title'] = "indent #" . $date;
 
         $head['usernm'] = $this->aauth->get_user()->username;
-		 $data['quote_items'] = $this->quote->get_quote_items_by_date($date);
+		 $data['quote_items'] = $this->quote->get_quote_items_by_date($date, $this->_current_seller_id());
 
 
         $this->load->view('fixed/header', $head);
@@ -690,7 +716,7 @@ $data['totalchalan'] = ($this->uri->segment(5)) ? $this->uri->segment(5) : 0;
             $date = $data['invoice']['invoicedate'] ?? '';
         }
 
-        $data['products'] = $this->quote->quote_products($tid);
+        $data['products'] = $this->quote->quote_products($tid, $this->_current_seller_id());
 
         $data['attach'] = $this->quote->attach($tid);
 
@@ -699,7 +725,7 @@ $data['totalchalan'] = ($this->uri->segment(5)) ? $this->uri->segment(5) : 0;
         $head['title'] = "indent #" . $date;
 
         $head['usernm'] = $this->aauth->get_user()->username;
-		 $data['quote_items'] = $this->quote->get_quote_items_by_date($date);
+		 $data['quote_items'] = $this->quote->get_quote_items_by_date($date, $this->_current_seller_id());
 
       /*   $this->load->view('fixed/header', $head);
 
@@ -777,6 +803,9 @@ $this->db->join('geopos_quotes_items qi', 'q.id = qi.tid');
 $this->db->join('users u', 'q.csd = u.id');
 $this->db->join('products p', ' qi.pid = p.id ');
 $this->db->where('q.invoicedate', $date);
+if ($this->_current_seller_id()) {
+    $this->db->where('p.seller_id', $this->_current_seller_id());
+}
 $this->db->order_by('qi.product', 'asc');
 $products_data = $this->db->get()->result_array();
 
@@ -787,7 +816,7 @@ foreach ($products_data as $row) {
     $pname = $row['productname'];
 	 $converted = convert_to_base_unit($row['unit']);
 	// echo  $converted['unit'];
-	 
+
 //$unit = preg_replace('/[0-9]+/', '', $row['unit']);
 $unit = $converted['unit'];
     if (!isset($products[$pname])) {
@@ -866,6 +895,9 @@ $this->db->join('geopos_quotes_items qi', 'q.id = qi.tid');
 $this->db->join('users u', 'q.csd = u.id');
 $this->db->join('products p', ' qi.pid = p.id ');
 $this->db->where('q.invoicedate', $date);
+if ($this->_current_seller_id()) {
+    $this->db->where('p.seller_id', $this->_current_seller_id());
+}
 $this->db->order_by('qi.product', 'asc');
 $products_data = $this->db->get()->result_array();
 $products = [];
@@ -1028,6 +1060,15 @@ public function store_puquote()
         $productunit    = $this->input->post('product_unit');
         $product_qty    = $this->input->post('product_qty');
 
+        $seller_id = $this->_current_seller_id();
+        $owned_product_ids = [];
+        if ($seller_id) {
+            $owned_product_ids = array_column(
+                $this->db->select('id')->where('seller_id', $seller_id)->get('products')->result_array(),
+                'id'
+            );
+        }
+
         foreach ($supplier_ids as $index => $supplier_id) {
 
             // 🔹 Step 1: Duplicate check
@@ -1062,6 +1103,9 @@ public function store_puquote()
                 $allowed_ids = array_column($allowed_products, 'product_id');
 
                 foreach ($pid as $key => $value) {
+                    if ($seller_id && !in_array($pid[$key], $owned_product_ids)) {
+                        continue; // skip products that don't belong to the logged-in seller
+                    }
                     if (empty($allowed_ids) || in_array($pid[$key], $allowed_ids)) {
                         $item = array(
                             'order_id'   => $order_id,

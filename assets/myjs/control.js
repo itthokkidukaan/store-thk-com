@@ -774,7 +774,7 @@ function searchCS(actionurl) {
             data: $("#product_action").serialize() + '&' + crsf_token + '=' + crsf_hash,
             dataType: 'json',
             success: function (data) {
-                if (data.message == 'Registered Successfully' || data.error === false || data.error === 'false') {
+                if (data.message == 'Registered Successfully' || data.error === false || data.error === 'false' || data.status == 'Success') {
                     if (typeof iziToast !== 'undefined') {
                         iziToast.success({
                             title: 'Success',
@@ -822,6 +822,7 @@ function searchCS(actionurl) {
                         
                         $('#custom_discount').val(data.discount);
                         $("#customer-box-result").hide();
+                        $("#supplier-box-result").hide();
                         $("#customer").show();
                         $('#addCustomer').find('input:text,input:hidden').val('');
                     } catch (e) {

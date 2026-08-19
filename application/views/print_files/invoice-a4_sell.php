@@ -201,11 +201,19 @@
         </thead>
         <tbody>
         <tr>
-            <td><strong><?php $loc = location($invoice['loc']);
-                    echo $loc['cname']; ?></strong><br>
+            <td>
+                <?php
+                $order_seller_id = !empty($products) ? ($products[0]['seller_id'] ?? 0) : 0;
+                $seller_loc = invoice_seller_branding($order_seller_id);
+                $info_loc = $seller_loc ?: invoice_company_details($invoice['loc']);
+                if ($seller_loc && !empty($seller_loc['logo_path'])) {
+                    echo '<img src="' . FCPATH . $seller_loc['logo_path'] . '" style="max-height:50px;max-width:120px;" alt=""><br>';
+                }
+                ?>
+                <strong><?php echo $info_loc['cname']; ?></strong><br>
                 <?php echo
-                    $loc['address'] . '<br>' . $loc['city'] . ', ' . $loc['region'] . '<br>' . $loc['country'] . ' -  ' . $loc['postbox'] . '<br>' . $this->lang->line('Phone') . ': ' . $loc['phone'] . '<br> ' . $this->lang->line('Email') . ': ' . $loc['email'];
-                if ($loc['taxid']) echo '<br>' . $this->lang->line('TaxID') . ': ' . $loc['taxid'];
+                    $info_loc['address'] . '<br>' . $info_loc['city'] . ', ' . $info_loc['region'] . '<br>' . $info_loc['country'] . ' -  ' . $info_loc['postbox'] . '<br>' . $this->lang->line('Phone') . ': ' . $info_loc['phone'] . '<br> ' . $this->lang->line('Email') . ': ' . $info_loc['email'];
+                if ($info_loc['taxid']) echo '<br>' . $this->lang->line('TaxID') . ': ' . $info_loc['taxid'];
                 ?>
                 <?php if (!empty($employee['name'])) { ?>
                     <br><br><strong>Seller Details:</strong><br>
@@ -327,7 +335,7 @@
             <td>
                 <?php echo $this->lang->line('Qty') ?>
             </td>
-            <?php if ($invoice['tax'] > 0) echo '<td>' . $this->lang->line('Tax') . '</td>';
+            <?php if ($invoice['tax_amount'] > 0) echo '<td>' . $this->lang->line('Tax') . '</td>';
             if ($invoice['discount'] > 0) echo '<td>' . $this->lang->line('Discount') . '</td>'; ?>
             <td class="t_center">
                 <?php echo $this->lang->line('SubTotal') ?>
@@ -352,9 +360,9 @@
                             <td>' . $row['product_name'] .'</td><td>'.$row['variant_name'] . '</td>
 							<td style="width:12%;">' . amountExchange($row['price'], $invoice['multi'], $invoice['loc']) . '</td>
                             <td style="width:12%;" >' . +$row['quantity'] . '</td>   ';
-            if ($invoice['tax'] > 0) {
+            if ($invoice['tax_amount'] > 0) {
                 $cols++;
-                echo '<td style="width:16%;">' . amountExchange($row['totaltax'], $invoice['multi'], $invoice['loc']) . ' <span class="tax">(' . amountFormat_s($row['tax']) . '%)</span></td>';
+                echo '<td style="width:16%;">' . amountExchange($row['tax_amount'], $invoice['multi'], $invoice['loc']) . ' <span class="tax">(' . amountFormat_s($row['tax_percent']) . '%)</span></td>';
             }
             if ($invoice['discount'] > 0) {
                 $cols++;
@@ -394,7 +402,7 @@
 
             $sub_t_col++;
         }
-        if ($invoice['tax'] > 0) {
+        if ($invoice['tax_amount'] > 0) {
             $sub_t_col++;
         }
         if ($invoice['discount'] > 0) {
@@ -425,7 +433,7 @@
                             echo '<p>' . $this->lang->line('Round Off') . ' ' . $this->lang->line('Amount') . ': ' . amountExchange($final_amount, $invoice['multi'], $invoice['loc']) . '</p><br><p>';
                         }
 
-                        echo $this->lang->line('Paid Amount') . ': ' . amountExchange($invoice['pamnt'], $invoice['multi'], $invoice['loc']);
+                        echo $this->lang->line('Paid Amount') . ': ' . amountExchange($invoice['total'] - $invoice['pending_amount'], $invoice['multi'], $invoice['loc']);
                     }
 
                     if ($general['t_type'] == 1) {
@@ -440,10 +448,10 @@
             <td><?php echo $this->lang->line('SubTotal') ?>:</td>
             <td><?php echo amountExchange($invoice['total'], $invoice['multi'], $invoice['loc']); ?></td>
         </tr>
-        <?php if ($invoice['tax'] > 0) {
+        <?php if ($invoice['tax_amount'] > 0) {
             echo '<tr>
             <td> ' . $this->lang->line('Total Tax') . ' :</td>
-            <td>' . amountExchange($invoice['tax'], $invoice['multi'], $invoice['loc']) . '</td>
+            <td>' . amountExchange($invoice['tax_amount'], $invoice['multi'], $invoice['loc']) . '</td>
         </tr>';
         }
         if ($invoice['discount'] > 0) {
@@ -461,7 +469,7 @@
         ?>
         <tr>
             <td style="color:red"><?php echo $this->lang->line('Balance Due') ?>:</td>
-            <td style="color:red"><strong><?php $rming = $invoice['total'] - $invoice['pamnt'];
+            <td style="color:red"><strong><?php $rming = $invoice['pending_amount'];
     if ($rming < 0) {
         $rming = 0;
     }
@@ -469,15 +477,23 @@
         $rming = round($rming, $round_off['active'], constant($round_off['other']));
     }
     echo amountExchange($rming, $invoice['multi'], $invoice['loc']);
+    if ($seller_loc && !empty($seller_loc['bank_name'])) {
+        $bank_details_html = '<b>Payee:</b> ' . htmlspecialchars($seller_loc['account_name']) . ' <br/>'
+            . '<b>Ac No:</b> ' . htmlspecialchars($seller_loc['account_number']) . ' <br/>'
+            . '<b>IFSC:</b> ' . htmlspecialchars($seller_loc['bank_code']) . ' <br/>'
+            . '<b>Bank:</b> ' . htmlspecialchars($seller_loc['bank_name']);
+        $bank_qr_html = '';
+    } else {
+        $bank_details_html = '<b>Payee:</b> Thok ki Dukaan <br/>'
+            . '<b>Ac No:</b> 8546622014 <br/>'
+            . '<b>IFSC:</b> KKBK0005171 <br/>'
+            . '<b>Branch:</b> Nehru Colony <br/>'
+            . '<b>Bank:</b> kotak mahindra bank';
+        $bank_qr_html = '<img src="' . FCPATH . 'userfiles/bank/thokidukan.jpg"  border="0" height="100" alt="">';
+    }
     echo '</strong></td>
 		</tr>
-		</table><br><table><tr class="heading"><td>Account Details</td><td>QR Code</td></tr><tr><td>
-<b>Payee:</b> Thok ki Dukaan <br/>
-<b>Ac No:</b> 8546622014 <br/>
-<b>IFSC:</b> KKBK0005171 <br/>
-<b>Branch:</b> Nehru Colony <br/>
-<b>Bank:</b> kotak mahindra bank 
-</td><td><img src="' . FCPATH . 'userfiles/bank/thokidukan.jpg"  border="0" height="100" alt=""></td></tr></table><div class="sign">' . $this->lang->line('Authorized person') . '</div><div class="sign1"><img src="' . FCPATH . 'userfiles/employee_sign/' . $employee['sign'] . '" width="160" height="50" border="0" alt=""></div><div class="sign2">(' . $employee['name'] . ')</div><div class="terms">' . $invoice['notes'] . '<hr><strong>' . $this->lang->line('Terms') . ':</strong><br>';
+		</table><br><table><tr class="heading"><td>Account Details</td><td>QR Code</td></tr><tr><td>' . $bank_details_html . '</td><td>' . $bank_qr_html . '</td></tr></table><div class="sign">' . $this->lang->line('Authorized person') . '</div><div class="sign1"><img src="' . FCPATH . 'userfiles/employee_sign/' . $employee['sign'] . '" width="160" height="50" border="0" alt=""></div><div class="sign2">(' . $employee['name'] . ')</div><div class="terms">' . $invoice['notes'] . '<hr><strong>' . $this->lang->line('Terms') . ':</strong><br>';
 
     echo '<strong>' . $invoice['termtit'] . '</strong><br>' . $invoice['terms'];
     ?></div>

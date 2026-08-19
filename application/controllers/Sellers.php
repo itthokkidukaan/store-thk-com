@@ -9,17 +9,24 @@ class Sellers extends CI_Controller
     {
         parent::__construct();
         $this->load->database();
-        $this->load->library([ 'form_validation', 'upload']);
+        $this->load->library([ 'form_validation', 'upload', 'ion_auth']);
         $this->load->library("Aauth");
         $this->load->helper(['url', 'language', 'file']);
         $this->load->model('Seller_model');
         $this->load->model('category_model');
         $this->data = [];
 
-       /*  if (!has_permissions('read', 'seller')) {
-            $this->session->set_flashdata('authorize_flag', PERMISSION_ERROR_MSG);
-            redirect('admin/home', 'refresh');
-        } */
+        if (!is_cli()) {
+            if (!$this->aauth->is_loggedin()) {
+                redirect('/user/', 'refresh');
+                exit;
+            }
+            if (!has_permissions('read', 'seller')) {
+                $this->session->set_flashdata('authorize_flag', PERMISSION_ERROR_MSG);
+                redirect('dashboard', 'refresh');
+                exit;
+            }
+        }
     }
 
     public function index()
@@ -860,26 +867,18 @@ class Sellers extends CI_Controller
                             $commission_data = json_decode($this->input->post('commission_data'), true);
 
                             if (is_array($commission_data['category_id'])) {
-                                if (count($commission_data['category_id']) >= 2) {
-                                    $cat_array = array_unique($commission_data['category_id']);
-                                    foreach ($commission_data['commission'] as $key => $val) {
-                                        if (!array_key_exists($key, $cat_array)) unset($commission_data['commission'][$key]);
-                                    }
-                                    $cat_array = array_values($cat_array);
-                                    $com_array = array_values($commission_data['commission']);
+                                $cat_array = array_unique($commission_data['category_id']);
+                                foreach ($commission_data['commission'] as $key => $val) {
+                                    if (!array_key_exists($key, $cat_array)) unset($commission_data['commission'][$key]);
+                                }
+                                $cat_array = array_values($cat_array);
+                                $com_array = array_values($commission_data['commission']);
 
-                                    for ($i = 0; $i < count($cat_array); $i++) {
-                                        $tmp['seller_id'] = $user_id[0]['id'];
-                                        $tmp['category_id'] = $cat_array[$i];
-                                        $tmp['commission'] = $com_array[$i];
-                                        $com_data[] = $tmp;
-                                    }
-                                } else {
-                                    $com_data[0] = array(
-                                        "seller_id" => $user_id[0]['id'],
-                                        "category_id" => $commission_data['category_id'],
-                                        "commission" => $commission_data['commission'],
-                                    );
+                                for ($i = 0; $i < count($cat_array); $i++) {
+                                    $tmp['seller_id'] = $user_id[0]['id'];
+                                    $tmp['category_id'] = $cat_array[$i];
+                                    $tmp['commission'] = $com_array[$i];
+                                    $com_data[] = $tmp;
                                 }
                             } else {
                                 $com_data[0] = array(

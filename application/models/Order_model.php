@@ -204,25 +204,26 @@ class Order_model extends CI_Model
             $gross_total = 0;
             $cart_data = [];
             for ($i = 0; $i < count($product_variant); $i++) {
+                // Keep $pv_price as the plain configured rate (special price if set, else price) --
+                // tax is tracked separately in $tax_amount and is never folded back into the rate,
+                // so order_items.price stays tax-exclusive (matches what's shown as "Rate").
                 $pv_price[$i] = ($product_variant[$i]['special_price'] > 0 && $product_variant[$i]['special_price'] != null) ? $product_variant[$i]['special_price'] : $product_variant[$i]['price'];
                 $tax_percentage[$i] = (isset($product_variant[$i]['tax_percentage']) && intval($product_variant[$i]['tax_percentage']) > 0 && $product_variant[$i]['tax_percentage'] != null) ? $product_variant[$i]['tax_percentage'] : '0';
-                if ((isset($product_variant[$i]['is_prices_inclusive_tax']) && $product_variant[$i]['is_prices_inclusive_tax'] == 0) || (!isset($product_variant[$i]['is_prices_inclusive_tax'])) && $tax_percentage[$i] > 0) {
-                    $tax_amount[$i] = $pv_price[$i] * ($tax_percentage[$i] / 100);
-                    $pv_price[$i] = $pv_price[$i] + $tax_amount[$i];
-                }
-
-                $subtotal[$i] = ($pv_price[$i])  * $quantity[$i];
-                $pro_name[$i] = $product_variant[$i]['product_name'];
-                $variant_info = get_variants_values_by_id($product_variant[$i]['id']);
-                $product_variant[$i]['variant_name'] = (isset($variant_info[0]['variant_values']) && !empty($variant_info[0]['variant_values'])) ? $variant_info[0]['variant_values'] : "";
-
-                $tax_percentage[$i] = (!empty($product_variant[$i]['tax_percentage'])) ? $product_variant[$i]['tax_percentage'] : 0;
-                if ($tax_percentage[$i] != NUll && $tax_percentage[$i] > 0) {
-                    $tax_amount[$i] = round($subtotal[$i] *  $tax_percentage[$i] / 100, 2);
+                $is_inclusive_tax = isset($product_variant[$i]['is_prices_inclusive_tax']) && $product_variant[$i]['is_prices_inclusive_tax'] == 1;
+                if (!$is_inclusive_tax && $tax_percentage[$i] > 0) {
+                    // Total tax for the whole line (qty-scaled), matching how tax_amount is
+                    // interpreted elsewhere (e.g. invoice line items), not a per-unit amount.
+                    $tax_amount[$i] = round($pv_price[$i] * $quantity[$i] * ($tax_percentage[$i] / 100), 2);
                 } else {
                     $tax_amount[$i] = 0;
                     $tax_percentage[$i] = 0;
                 }
+
+                $subtotal[$i] = ($pv_price[$i] * $quantity[$i]) + $tax_amount[$i];
+                $pro_name[$i] = $product_variant[$i]['product_name'];
+                $variant_info = get_variants_values_by_id($product_variant[$i]['id']);
+                $product_variant[$i]['variant_name'] = (isset($variant_info[0]['variant_values']) && !empty($variant_info[0]['variant_values'])) ? $variant_info[0]['variant_values'] : "";
+
                 $gross_total += $subtotal[$i];
                 $total += $subtotal[$i];
                 $total = round($total, 2);

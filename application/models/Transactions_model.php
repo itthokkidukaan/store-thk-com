@@ -173,7 +173,7 @@ class Transactions_model extends CI_Model
 function count_dailypayfiltered($from_date = '', $to_date = '')
 {
     $this->_get_dailypaydatatables_query($from_date, $to_date);
-    return $this->db->get()->num_rows();
+    return $this->db->count_all_results();
 }
 
 function count_dailypayall($from_date = '', $to_date = '')
@@ -202,24 +202,8 @@ function count_dailypayall($from_date = '', $to_date = '')
 
 	function count_filtered()
     {
-        $is_seller = is_seller_user();
-        $this->db->from('geopos_transactions');
-        switch ($this->opt) {
-            case 'income':
-                $this->db->where('type', 'Income');
-                break;
-            case 'expense':
-                $this->db->where('type', 'Expense');
-                break;
-        }
-        if ($is_seller) {
-            $this->db->where('eid', (int)$this->session->userdata('user_id'));
-        }
-        if ($this->aauth->get_user()->loc) {
-            $this->db->where('loc', $this->aauth->get_user()->loc);
-        }
-        $query = $this->db->get(); 
-        return $query->num_rows();
+        $this->_get_datatables_query();
+        return $this->db->count_all_results();
     }
 
     public function count_all()
@@ -277,6 +261,9 @@ function count_dailypayall($from_date = '', $to_date = '')
             $this->db->group_end();
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
+        }
+        if ($this->db->field_exists('eid', 'geopos_accounts') && function_exists('is_seller_user') && is_seller_user()) {
+            $this->db->where('eid', (int)$this->session->userdata('user_id'));
         }
         $query = $this->db->get();
         return $query->result_array();

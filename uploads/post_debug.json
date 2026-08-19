@@ -1,91 +1,73 @@
 {
-    "pro_input_image": "uploads\/media\/2026\/istockphoto-184276818-612x612.jpg",
+    "pro_input_image": "uploads\/media\/2026\/fresh-red-apple-stockcake.jpg",
     "product_type": "variable_product",
     "variant_stock_status": "0",
     "variant_stock_level_type": "variable_level",
     "simple_product_stock_status": "",
-    "pro_input_name": "Special Apple",
-    "category_id": "245",
-    "total_allowed_quantity": "100",
+    "pro_input_name": "Apple",
+    "category_id": "198",
+    "total_allowed_quantity": "-3",
     "total_required_quantity": "0",
-    "purchaseprice": "200",
+    "purchaseprice": "100",
     "purchase_price_per": "Kilogram",
     "products_id": "",
     "row_id": [
-        "0",
         "0"
     ],
     "printname": [
-        "Special Apple",
-        "Special Apple"
+        "Apple"
     ],
     "article": [
-        "A1001",
-        "A1002"
+        "10001"
     ],
     "hpnumber": [
-        "HP1001",
-        "HP1002"
+        "10001"
     ],
     "attr": [
-        "Kilogram",
         "Kilogram"
     ],
     "uom": [
-        "1Kg",
-        "2Kg"
+        "1Kg"
     ],
     "variants_ids": [
-        "1",
-        "2"
+        "1"
     ],
     "edit_variant_id": [
-        "",
         ""
     ],
     "purchase_price": [
-        "200",
-        "200"
+        "100"
     ],
     "packing_price": [
-        "10",
-        "20"
+        "0"
     ],
     "margin_type": [
-        "Fixed",
         "Fixed"
     ],
     "margin_percent": [
-        "5",
-        "5"
+        "0"
     ],
     "disc_percent": [
-        "10",
-        "10"
+        "0"
     ],
     "variant_price": [
-        "215",
-        "225"
+        "100"
     ],
     "variant_special_price": [
-        "194.5",
-        "204.5"
+        "100"
     ],
     "variant_sku": [
-        "special-apple-1Kg-3MKEZP",
-        "special-apple-2Kg-TJRW7O"
+        "apple-1Kg-8Z7ZW6"
     ],
     "variant_total_stock": [
-        "100",
         "100"
     ],
     "variant_level_stock_status": [
-        "1",
         "1"
     ],
-    "seller_id": "464",
-    "short_description": "Special apple",
-    "pro_input_tax": "1",
+    "seller_id": "834",
+    "short_description": "Apple",
+    "pro_input_tax": "2",
     "indicator": "0",
     "minimum_order_quantity": "1",
     "quantity_step_size": "1",

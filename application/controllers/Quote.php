@@ -106,7 +106,7 @@ class Quote extends CI_Controller
         }
 
         if (function_exists('is_seller_user') && is_seller_user()) {
-            $this->db->where('assigned', (int)$this->session->userdata('user_id'));
+            $this->db->where('assigned_seller', (int)$this->session->userdata('user_id'));
         }
 
         $this->db->order_by('username', 'asc');

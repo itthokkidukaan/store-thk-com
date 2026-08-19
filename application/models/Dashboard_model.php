@@ -12,7 +12,7 @@ class Dashboard_model extends CI_Model
 
     private function get_seller_id()
     {
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             return (int)$this->session->userdata('user_id');
         }
         return 0;
@@ -250,7 +250,10 @@ class Dashboard_model extends CI_Model
     {
         $this->db->limit(13);
         $this->db->order_by('id', 'DESC');
-              if ($this->aauth->get_user()->id !=1) {
+        $seller_id = $this->get_seller_id();
+        if ($seller_id) {
+            $this->db->where('eid', $seller_id);
+        } elseif ($this->aauth->get_user()->roleid != 1) {
             $this->db->where('eid', $this->aauth->get_user()->id);
         } elseif (!BDATA) {
             $this->db->where('loc', 0);

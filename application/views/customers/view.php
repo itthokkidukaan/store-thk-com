@@ -11,7 +11,7 @@
                     <li><a data-action="close"><i class="ft-x"></i></a></li>
                 </ul>
             </div>
-        </div><?php print_r($details);?>
+        </div>
         <div class="card-content">
             <div id="notify" class="alert alert-success" style="display:none;">
                 <a href="#" class="close" data-dismiss="alert">&times;</a>
@@ -93,7 +93,7 @@
                                 </a>
 
                                  <a href="<?php echo base_url('customers/bulkpayment?id=' . $details['id']) ?>"
-                                   class="btn btn-grey-blue btn-md"><i
+                                   class="btn btn-warning btn-md"><i
                                             class="fa fa-money"></i> <?php echo $this->lang->line('Bulk Payment') ?>
                                 </a>
 
@@ -370,6 +370,10 @@
                                     <li class="list-group-item">
                                         <span class="badge tag-default tag-pill bg-blue float-xs-right"><?php echo amountExchange($due['discount'], 0, $this->aauth->get_user()->loc) ?></span>
                                         <?php echo $this->lang->line('Total Discount') ?>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <span class="badge tag-default tag-pill bg-warning float-xs-right"><?php echo amountExchange($pending['pending_amount'], 0, $this->aauth->get_user()->loc) ?></span>
+                                        <?php echo $this->lang->line('Pending Amount') ?>
                                     </li>
 
 

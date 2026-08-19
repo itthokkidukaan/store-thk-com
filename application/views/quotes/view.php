@@ -105,8 +105,8 @@
                 <div id="invoice-company-details" class="row mt-2">
                     <div class="col-md-6 col-sm-12 text-xs-center text-md-left">
                         <p></p>
-                        <img src="<?php $loc = location($invoice['loc']);
-                        echo base_url('userfiles/company/' . $loc['logo']) ?>"
+                        <img src="<?php $loc = invoice_company_details($invoice['loc']);
+                        echo base_url($loc['logo_path']) ?>"
                              class="img-responsive p-1 m-b-2" style="max-height: 120px;">
                         <p class="ml-2">
                             <strong><?= htmlspecialchars($loc['cname']) ?></strong><br>

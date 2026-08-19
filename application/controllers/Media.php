@@ -152,6 +152,16 @@ class Media extends CI_Controller
             print_r(json_encode($this->response));
             return false;
         }
+        /* sellers may delete only their own media */
+        if (function_exists('is_seller_user') && is_seller_user()
+            && $media[0]['seller_id'] != (int)$this->session->userdata('user_id')) {
+            $this->response['error'] = true;
+            $this->response['csrfName'] = $this->security->get_csrf_token_name();
+            $this->response['csrfHash'] = $this->security->get_csrf_hash();
+            $this->response['message'] = "You do not have permission to delete this media!";
+            print_r(json_encode($this->response));
+            return false;
+        }
         $path = FCPATH . $media[0]['sub_directory'] . $media[0]['name'];
         $where = array('id' => $id);
 

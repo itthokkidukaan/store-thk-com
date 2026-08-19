@@ -164,12 +164,17 @@
 <div id="header">GST <?= $general['title'] ?></div>
 <table class="header_table">
     <tr>
-        <td class="company"><?php $loc = location($invoice['loc']);
-            echo $this->lang->line('From') . '<br>';
-            echo '<strong>' . $loc['cname']; ?></strong><br>
+        <td class="company"><?php
+            $seller_loc = invoice_seller_branding($invoice['eid'] ?? 0);
+            $info_loc = $seller_loc ?: invoice_company_details($invoice['loc']);
+            echo ($seller_loc ? 'Seller' : $this->lang->line('From')) . '<br>';
+            if ($seller_loc && !empty($seller_loc['logo_path'])) {
+                echo '<img src="' . FCPATH . $seller_loc['logo_path'] . '" style="max-height:50px;max-width:120px;" alt=""><br>';
+            }
+            echo '<strong>' . $info_loc['cname']; ?></strong><br>
             <?php echo
-                $loc['address'] . '<br>' . $loc['city'] . ', ' . $loc['region'] . '<br>' . $loc['country'] . ' -  ' . $loc['postbox'] . '<br>' . $this->lang->line('Phone') . ': ' . $loc['phone'] . '<br> ' . $this->lang->line('Email') . ': ' . $loc['email'];
-            if ($loc['taxid']) echo '<br>' . $this->lang->line('GSTIN') . ' : ' . $loc['taxid'];
+                $info_loc['address'] . '<br>' . $info_loc['city'] . ', ' . $info_loc['region'] . '<br>' . $info_loc['country'] . ' -  ' . $info_loc['postbox'] . '<br>' . $this->lang->line('Phone') . ': ' . $info_loc['phone'] . '<br> ' . $this->lang->line('Email') . ': ' . $info_loc['email'];
+            if ($info_loc['taxid']) echo '<br>' . $this->lang->line('GSTIN') . ' : ' . $info_loc['taxid'];
             ?>
             <?php if (!empty($employee['name'])) { ?>
                 <br><br><strong>Seller Details:</strong><br>
@@ -181,8 +186,8 @@
         <td>
 
 
-            <img id="image" src="<?php $loc = location($invoice['loc']);
-            echo FCPATH . 'userfiles/company/' . $loc['logo'] ?>" alt="logo" class="top_logo"/>
+            <img id="image" src="<?php $loc = invoice_company_details($invoice['loc']);
+            echo FCPATH . $loc['logo_path'] ?>" alt="logo" class="top_logo"/>
         </td>
     </tr>
     <tr>

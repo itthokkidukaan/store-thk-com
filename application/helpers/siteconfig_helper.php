@@ -35,6 +35,71 @@ if (!function_exists('is_seller_user')) {
     }
 }
 
+/**
+ * The site's own business/company details (Settings -> Company), for the invoice
+ * masthead/top header. Always the admin's own business, never a seller's -- who is
+ * logged in / which seller owns the document does not matter here.
+ * Shape matches location()'s row plus 'logo_path' (webroot-relative logo file path).
+ */
+if (!function_exists('invoice_company_details')) {
+    function invoice_company_details($loc = 0)
+    {
+        $loc_data = location($loc);
+        $loc_data['logo_path'] = 'userfiles/company/' . $loc_data['logo'];
+        $loc_data['is_seller'] = false;
+        $loc_data['bank_name'] = '';
+        $loc_data['bank_code'] = '';
+        $loc_data['account_name'] = '';
+        $loc_data['account_number'] = '';
+        return $loc_data;
+    }
+}
+
+/**
+ * The specific seller's store name/logo/address/tax/bank info for the "Seller"
+ * section of an invoice -- the seller who actually owns the order/product/quote
+ * being printed, looked up by that seller's users.id (NOT the current session's
+ * identity). Returns null when $seller_user_id is empty or isn't a seller with a
+ * seller_data row, so callers can fall back to invoice_company_details().
+ */
+if (!function_exists('invoice_seller_branding')) {
+    function invoice_seller_branding($seller_user_id)
+    {
+        if (empty($seller_user_id)) {
+            return null;
+        }
+        $ci =& get_instance();
+        $ci->load->database();
+        $seller = $ci->db->select('sd.store_name, sd.logo, sd.tax_number, sd.bank_name, sd.bank_code, sd.account_name, sd.account_number, u.address, u.mobile, u.email')
+            ->from('seller_data sd')
+            ->join('users u', 'u.id = sd.user_id')
+            ->where('sd.user_id', (int)$seller_user_id)
+            ->get()->row_array();
+        if (empty($seller)) {
+            return null;
+        }
+        return array(
+            'cname' => $seller['store_name'],
+            'address' => $seller['address'],
+            'city' => '',
+            'region' => '',
+            'country' => '',
+            'postbox' => '',
+            'phone' => $seller['mobile'],
+            'email' => $seller['email'],
+            'taxid' => $seller['tax_number'],
+            'logo' => $seller['logo'],
+            'logo_path' => $seller['logo'],
+            'foundation' => '',
+            'is_seller' => true,
+            'bank_name' => $seller['bank_name'],
+            'bank_code' => $seller['bank_code'],
+            'account_name' => $seller['account_name'],
+            'account_number' => $seller['account_number'],
+        );
+    }
+}
+
 function dateformat($input)
 {
     $ci =& get_instance();

@@ -127,7 +127,7 @@ if (!$has_donut_values && !empty($expensechart)) {
 			?>	
 									<div class=" col-md-6">
                                     <div class="media-body text-right">
-                                       <a href="https://thokkidukaan.com/seller/home" target="_blank"> <h5 class="text-muted text-bold-500">Online Orders</h5>
+                                       <a href="<?=base_url()?>invoices"> <h5 class="text-muted text-bold-500">Online Orders</h5>
                                         <h3 class="text-bold-600"><?=$order_online?></h3> </a>
                                     </div>
 									

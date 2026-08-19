@@ -52,9 +52,8 @@ $('#productname-' + cvalue).autocomplete({
                 var uom = item[13];
                 const $select = $('#prounit-' + rowId);
                 if ($select.length) {
-                    if (!$select.find("option[value='" + uom + "']").length) {
-                        $select.append(new Option(uom, uom));
-                    }
+                    $select.html('<option value="">Select</option>');
+                    $select.append(item[6]);
                     $select.val(uom).trigger('change');
                 }
                 $('#prounit-display-' + rowId).val(uom);
@@ -176,9 +175,8 @@ $('#productname-' + cvalue).autocomplete({
                 var uom = item[13];
                 const $select = $('#prounit-' + rowId);
                 if ($select.length) {
-                    if (!$select.find("option[value='" + uom + "']").length) {
-                        $select.append(new Option(uom, uom));
-                    }
+                    $select.html('<option value="">Select</option>');
+                    $select.append(item[6]);
                     $select.val(uom).trigger('change');
                 }
                 $('#prounit-display-' + rowId).val(uom);
@@ -358,9 +356,8 @@ $('#addchalanproduct').on('click', function () {
                     var uom = item[13];
                     const $select = $('#prounit-' + rowId);
                     if ($select.length) {
-                        if (!$select.find("option[value='" + uom + "']").length) {
-                            $select.append(new Option(uom, uom));
-                        }
+                        $select.html('<option value="">Select</option>');
+                        $select.append(item[6]);
                         $select.val(uom).trigger('change');
                     }
                     $('#prounit-display-' + rowId).val(uom);
@@ -1168,9 +1165,8 @@ $('#productname-0').autocomplete({
                 var uom = item[13];
                 const $select = $('#prounit-' + rowId);
                 if ($select.length) {
-                    if (!$select.find("option[value='" + uom + "']").length) {
-                        $select.append(new Option(uom, uom));
-                    }
+                    $select.html('<option value="">Select</option>');
+                    $select.append(item[6]);
                     $select.val(uom).trigger('change');
                 }
                 $('#prounit-display-' + rowId).val(uom);
@@ -1443,9 +1439,8 @@ $(document).on('keydown', '[id^="productname-"]', function(e) {
                         var uom = item[13];
                         const $select = $(`#prounit-${rowId}`);
                         if ($select.length) {
-                            if (!$select.find("option[value='" + uom + "']").length) {
-                                $select.append(new Option(uom, uom));
-                            }
+                            $select.html('<option value="">Select</option>');
+                            $select.append(item[6]);
                             $select.val(uom).trigger('change');
                         }
                         $(`#prounit-display-${rowId}`).val(uom);

@@ -65,10 +65,10 @@ class Invoices extends CI_Controller
     //edit invoice
     public function edit()
     {
-        if (!$this->aauth->premission(13)) {
-            exit('<h3>Sorry! You have insufficient permissions to access this section</h3>');
-        }
         $tid = intval($this->input->get('id'));
+        if (!$this->aauth->premission(13)) {
+            redirect('invoices/view?id=' . $tid, 'refresh');
+        }
         $data['id'] = $tid;
         $data['title'] = "Edit Invoice $tid";
         $this->load->model('customers_model', 'customers');
@@ -1072,7 +1072,8 @@ return $product->stock;
 
     public function ajax_list()
     {
-        $list = $this->invocies->get_datatables($this->limited, $this->aauth->get_user()->id);
+        sync_online_order_stock_ledger();
+        $list = $this->invocies->get_datatables($this->limited);
         $data = array();
         $no = $this->input->post('start');
 	
@@ -1090,7 +1091,7 @@ return $product->stock;
 				$acturl ='invoices';
 			}
 			
-			$challanid = $this->invocies->get_id_by_tid($invoices->chalanno);
+			$challanid = (!empty($invoices->chalanno)) ? $this->invocies->get_id_by_tid($invoices->chalanno) : false;
 			
 			$chlan = ($invoices->chalanno != '')? ' | <a href="' . base_url("chalan/view?id={$challanid}") . '" target="_blank">' . $invoices->chalanno . '</a>': '';
 
@@ -1142,13 +1143,15 @@ return $product->stock;
             "totalsale" => round((float) ($totalsale['total'] ?? 0), 2),
             "data" => $data,
         );
-        echo json_encode($output);
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($output));
     } 
 
 
 	public function ajaxtrash_list()
     {
-        $list = $this->invocies->get_trashdatatables($this->limited, $this->aauth->get_user()->id);
+        $list = $this->invocies->get_trashdatatables($this->limited);
         $data = array();
         $no = $this->input->post('start');
 	
@@ -1185,7 +1188,9 @@ return $product->stock;
             "totalsale" => round((float) $totalsale, 2),
             "data" => $data,
         );
-        echo json_encode($output);
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($output));
     }
 	
 public function restoreinvoice()
@@ -1643,7 +1648,7 @@ $seller_id = isset($product_variant['seller_id']) ? $product_variant['seller_id'
 
         $bill_date = datefordatabase($invoicedate);
         $bill_due_date = datefordatabase($invocieduedate);
-        $data = array( 'mobile' => $mobile, 'date_added' => $bill_date, 'invoiceduedate' => $bill_due_date, 'final_total' => $subtotal, 'total_payable' => $subtotal, 'shipping' => $shipping, 'ship_tax' => $shipping_tax, 'ship_tax_type' => $ship_taxtype, 'discount_rate' => $disc_val, 'total' => $total, 'notes' => $notes, 'user_id' => $customer_id,  'taxstatus' => $tax, 'discstatus' => $discstatus, 'format_discount' => $discountFormat, 'refer' => $refer, 'term' => $pterms,  'loc' => $this->aauth->get_user()->loc, 'orderdone_by' => 'Manual','status' => 'due');
+        $data = array( 'mobile' => $mobile, 'date_added' => $bill_date, 'updated_at' => date('Y-m-d H:i:s'), 'invoiceduedate' => $bill_due_date, 'final_total' => $subtotal, 'total_payable' => $subtotal, 'shipping' => $shipping, 'ship_tax' => $shipping_tax, 'ship_tax_type' => $ship_taxtype, 'discount_rate' => $disc_val, 'total' => $total, 'notes' => $notes, 'user_id' => $customer_id,  'taxstatus' => $tax, 'discstatus' => $discstatus, 'format_discount' => $discountFormat, 'refer' => $refer, 'term' => $pterms,  'loc' => $this->aauth->get_user()->loc, 'orderdone_by' => 'Manual','status' => 'due');
         $this->db->set($data);
         $this->db->where('id', $iid);
 

@@ -4290,7 +4290,7 @@ $(document).on('click', '.remove-sellers', function () {
             return new Promise((resolve, reject) => {
                 $.ajax({
                     type: 'GET',
-                    url: base_url + 'admin/sellers/remove_sellers',
+                    url: base_url + 'sellers/remove_sellers',
                     data: {
                         id: id,
                         status: status
@@ -4334,7 +4334,7 @@ $(document).on('click', '.delete-sellers', function () {
             return new Promise((resolve, reject) => {
                 $.ajax({
                     type: 'GET',
-                    url: base_url + 'admin/sellers/delete_sellers',
+                    url: base_url + 'sellers/delete_sellers',
                     data: {
                         id: id
                     },
@@ -6370,7 +6370,7 @@ $(document).on('click', '#create-slug', function (e) {
     e.preventDefault();
     $.ajax({
         type: 'get',
-        url: base_url + 'admin/sellers/create_slug',
+        url: base_url + 'sellers/create_slug',
         beforeSend: function () {
             $(this).html('Please Wait..').attr('disabled', true);
         },

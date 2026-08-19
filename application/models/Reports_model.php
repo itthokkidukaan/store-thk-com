@@ -35,7 +35,7 @@ class Reports_model extends CI_Model
         } elseif (!BDATA) {
             $where .= " AND type='$trans_type AND loc='0'";
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $where .= " AND eid='" . (int)$this->session->userdata('user_id') . "'";
         }
         $this->db->select('*');
@@ -61,7 +61,7 @@ class Reports_model extends CI_Model
         } elseif (!BDATA) {
             $where .= " AND loc='0'";
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $where .= " AND eid='" . (int)$this->session->userdata('user_id') . "'";
         }
         $this->db->select('*');
@@ -89,7 +89,7 @@ class Reports_model extends CI_Model
         } elseif (!BDATA) {
             $where .= " AND loc='0'";
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $where .= " AND eid='" . (int)$this->session->userdata('user_id') . "'";
         }
         $this->db->select('*');
@@ -117,7 +117,7 @@ class Reports_model extends CI_Model
         } elseif (!BDATA) {
             $where .= " AND loc='0'";
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $where .= " AND eid='" . (int)$this->session->userdata('user_id') . "'";
         }
         $this->db->select('*');
@@ -166,7 +166,7 @@ class Reports_model extends CI_Model
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $this->db->where('eid', (int)$this->session->userdata('user_id'));
         }
         $this->db->where('type', 'Income');
@@ -197,7 +197,7 @@ class Reports_model extends CI_Model
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $this->db->where('eid', (int)$this->session->userdata('user_id'));
         }
         $this->db->where('type', 'Income');
@@ -224,7 +224,7 @@ class Reports_model extends CI_Model
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $this->db->where('eid', (int)$this->session->userdata('user_id'));
         }
         $this->db->where('type', 'Expense');
@@ -237,7 +237,7 @@ class Reports_model extends CI_Model
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $this->db->where('eid', (int)$this->session->userdata('user_id'));
         }
         $query = $this->db->get();
@@ -262,7 +262,7 @@ class Reports_model extends CI_Model
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $this->db->where('eid', (int)$this->session->userdata('user_id'));
         }
         $this->db->where('type', 'Expense');
@@ -315,7 +315,7 @@ public function get_customerstatements($pay_acc, $trans_type, $sdate, $edate){
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $this->db->where('eid', (int)$this->session->userdata('user_id'));
         }
       
@@ -341,7 +341,7 @@ public function get_customerstatements($pay_acc, $trans_type, $sdate, $edate){
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
         }
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             $this->db->where('eid', (int)$this->session->userdata('user_id'));
         }
         //  $this->db->order_by('id', 'DESC');

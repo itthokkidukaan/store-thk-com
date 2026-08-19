@@ -579,41 +579,45 @@ class Pos_invoices_model extends CI_Model
     $this->db->select('*');
     $this->db->from('geopos_accounts');
 
- 
-        $this->db->where('employeeID', $this->aauth->get_user()->id); 
- 
+    if ($this->db->field_exists('eid', 'geopos_accounts') && function_exists('is_seller_user') && is_seller_user()) {
+        $this->db->where('eid', (int)$this->session->userdata('user_id'));
+    } else {
+        $this->db->where('employeeID', $this->aauth->get_user()->id);
+    }
 
     $query = $this->db->get();
     $result =  $query->result_array();
 	$accId = 0;
 	$lastbal = 0;
 	foreach($result as $row){
-		
+
 		$accId = $row['id'];
 		$lastbal = $row['lastbal'];
-		
+
 	}
 	return $accId;
-}	
+}
 
 public function accountbalance()
 {
     $this->db->select('*');
     $this->db->from('geopos_accounts');
 
- 
-        $this->db->where('employeeID', $this->aauth->get_user()->id); 
- 
+    if ($this->db->field_exists('eid', 'geopos_accounts') && function_exists('is_seller_user') && is_seller_user()) {
+        $this->db->where('eid', (int)$this->session->userdata('user_id'));
+    } else {
+        $this->db->where('employeeID', $this->aauth->get_user()->id);
+    }
 
     $query = $this->db->get();
     $result =  $query->result_array();
 	$accId = 0;
 	$lastbal = 0;
 	foreach($result as $row){
-		
-		
+
+
 		$lastbal = $row['lastbal'];
-		
+
 	}
 	return $lastbal;
 }

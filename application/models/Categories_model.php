@@ -16,18 +16,31 @@ ORDER BY id DESC");
 
     public function warehouse_list()
     {
-        $where = '';
+        $conditions = array();
 
-
-        if (!BDATA) $where = "WHERE  (loc=0) ";
+        if (!BDATA) $conditions[] = "(loc=0)";
         if ($this->aauth->get_user()->loc) {
-            $where = "WHERE  (loc=" . $this->aauth->get_user()->loc . " ) ";
-            if (BDATA) $where = "WHERE  (loc=" . $this->aauth->get_user()->loc . " OR geopos_warehouse.loc=0) ";
+            $conditions = array();
+            if (BDATA) {
+                $conditions[] = "(loc=" . $this->aauth->get_user()->loc . " OR geopos_warehouse.loc=0)";
+            } else {
+                $conditions[] = "(loc=" . $this->aauth->get_user()->loc . ")";
+            }
         }
 
+        if (is_seller_user()) {
+            $seller_id = (int)$this->session->userdata('user_id');
+            if ($this->db->field_exists('created_by', 'geopos_warehouse')) {
+                $conditions[] = "(id = 1 OR created_by = $seller_id)";
+            } else {
+                $conditions[] = "(id = 1)";
+            }
+        }
+
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
         $query = $this->db->query("SELECT id,title
-FROM geopos_warehouse $where 
+FROM geopos_warehouse $where
 
 ORDER BY id DESC");
         return $query->result_array();
@@ -89,12 +102,15 @@ ORDER BY id DESC");
 	public function warehouse()
 {
     $is_seller = is_seller_user();
-    $where = '';
+    $conditions = array();
     if ($this->aauth->get_user()->loc) {
-        $where = ' WHERE c.loc=' . $this->aauth->get_user()->loc;
-        if (BDATA) $where = ' WHERE c.loc=' . $this->aauth->get_user()->loc . ' OR c.loc=0';
+        if (BDATA) {
+            $conditions[] = '(c.loc=' . $this->aauth->get_user()->loc . ' OR c.loc=0)';
+        } else {
+            $conditions[] = '(c.loc=' . $this->aauth->get_user()->loc . ')';
+        }
     } elseif (!BDATA) {
-        $where = ' WHERE  c.loc=0';
+        $conditions[] = '(c.loc=0)';
     }
 
     // PHP date range for current month
@@ -105,7 +121,13 @@ ORDER BY id DESC");
     if ($is_seller) {
         $seller_id = (int)$this->session->userdata('user_id');
         $seller_where = " WHERE pr.seller_id = $seller_id ";
+        if ($this->db->field_exists('created_by', 'geopos_warehouse')) {
+            $conditions[] = "(c.id = 1 OR c.created_by = $seller_id)";
+        } else {
+            $conditions[] = "(c.id = 1)";
+        }
     }
+    $where = $conditions ? ' WHERE ' . implode(' AND ', $conditions) : '';
 
     $query = $this->db->query("
         SELECT 
@@ -190,6 +212,9 @@ p.pid='$id' $qj ");
             'extra' => $cat_desc,
             'loc' => $lid
         );
+        if ($this->db->field_exists('created_by', 'geopos_warehouse')) {
+            $data['created_by'] = is_seller_user() ? (int)$this->session->userdata('user_id') : (int)$this->aauth->get_user()->id;
+        }
 
         if ($this->db->insert('geopos_warehouse', $data)) {
             $this->aauth->applog("[WareHouse Created] $cat_name ID " . $this->db->insert_id(), $this->aauth->get_user()->username);

@@ -5,13 +5,14 @@ class Home_model extends CI_Model
 
     public function count_new_orders($type = '')
     {
+        $is_seller = $this->ion_auth->is_seller();
         $res = $this->db->select('count(o.id) as counter');
 
 		   $userid = $this->aauth->get_user()->id;
 		
 		
 		$this->db->where('o.orderdone_by', $type);
-        if ($this->ion_auth->is_seller()) {
+        if ($is_seller) {
             $this->db->join('order_items oi', 'oi.order_id=o.id', 'left');
             $this->db->where('oi.seller_id', $userid);
             $this->db->select('count(DISTINCT o.id) as counter', false);
@@ -26,12 +27,13 @@ class Home_model extends CI_Model
 
     public function count_orders_by_status($status)
     {
+        $is_seller = $this->ion_auth->is_seller();
         $res = $this->db->select('count(id) as counter');
         $this->db->where('active_status', $status);
 		   $userid = $this->aauth->get_user()->id;
 		
 		
-        if ($this->ion_auth->is_seller()) {
+        if ($is_seller) {
             $this->db->join('order_items oi', 'oi.order_id=o.id', 'left');
             $this->db->where('oi.seller_id', $userid);
             $this->db->select('count(DISTINCT o.id) as counter', false);

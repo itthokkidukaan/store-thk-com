@@ -111,16 +111,23 @@ class Invoices_model extends CI_Model
 
 
 	$sql = "
-    SELECT 
-        oi.*, 
+    SELECT
+        oi.*,
+        oi.product_name AS product,
+        oi.product_id AS pid,
+        oi.quantity AS qty,
+        oi.sub_total AS subtotal,
+        oi.tax_percent AS tax,
+        oi.tax_amount AS totaltax,
+        oi.variant_name AS unit,
         p.article,
         (
             SELECT gpi.price
             FROM geopos_purchase_items gpi
             JOIN geopos_purchase gp ON gp.id = gpi.tid
-            WHERE 
+            WHERE
                 (
-                    gpi.product = oi.product_name 
+                    gpi.product = oi.product_name
                     OR gpi.pid = oi.product_id
                 )
                 AND gp.invoicedate <= DATE(o.date_added)
@@ -150,16 +157,23 @@ return $query->result_array();
         $is_seller = is_seller_user();
 
 
-$sql = "SELECT 
-    oi.*, 
+$sql = "SELECT
+    oi.*,
+    oi.product_name AS product,
+    oi.product_id AS pid,
+    oi.quantity AS qty,
+    oi.sub_total AS subtotal,
+    oi.tax_percent AS tax,
+    oi.tax_amount AS totaltax,
+    oi.variant_name AS unit,
     p.article,
     (
         SELECT gpi.price
         FROM geopos_purchase_items gpi
         JOIN geopos_purchase gp ON gp.id = gpi.tid
-        WHERE 
+        WHERE
             (
-                gpi.product = oi.product_name 
+                gpi.product = oi.product_name
                 OR gpi.pid = oi.product_id
             )
             AND gp.invoicedate <= DATE(o.date_added)
@@ -203,7 +217,10 @@ return round($result['purchase_price'],2);
 public function get_id_by_tid($tid_string)
     {
         // sirf number extract karega e.g. CN2348 → 2348
-        $tid = preg_replace('/\D/', '', $tid_string);
+        if ($tid_string === null) {
+            $tid_string = '';
+        }
+        $tid = preg_replace('/\D/', '', (string)$tid_string);
 
         if ($tid == '') {
             return false; // agar valid number hi nahi mila
@@ -251,9 +268,9 @@ public function get_id_by_tid($tid_string)
     $total_purchase_value = 0;
 
     foreach ($result as $row) {
-        $con = convert_to_base_unit($row['variant_name']);
+        $con = convert_to_base_unit((string)($row['variant_name'] ?? ''));
         $unit_qty = isset($con['qty']) ? $con['qty'] : 1;
-        $unit_purchase_price = $row['purchase_price'] * $unit_qty;
+        $unit_purchase_price = ((float)($row['purchase_price'] ?? 0)) * $unit_qty;
         $puprice = $row['quantity'] * $unit_purchase_price;
 
         $row['unit_purchase_price'] = $unit_purchase_price;
@@ -510,7 +527,7 @@ public function get_id_by_tid($tid_string)
 		if ($this->input->post('txttype') && $this->input->post('txttype') !='All') // if datatable send POST for search
         {
 
-            $this->db->where('status', $this->input->post('txttype'));
+            $this->db->where('orders.status', $this->input->post('txttype'));
         }
         $this->db->join('users', 'orders.user_id=users.id', 'left');
 
@@ -570,23 +587,25 @@ public function get_id_by_tid($tid_string)
 		if ($this->input->post('txttype') && $this->input->post('txttype') !='All') // if datatable send POST for search
         {
            
-            $this->db->where('status', $this->input->post('txttype'));
+            $this->db->where('orders.status', $this->input->post('txttype'));
         }
         $this->db->join('users', 'orders.user_id=users.id', 'left');
 
         $i = 0;
+        $search = $this->input->post('search');
+        $search_value = is_array($search) ? ($search['value'] ?? '') : '';
 
         foreach ($this->column_search as $item) // loop column
         {
-            if ($this->input->post('search')['value']) // if datatable send POST for search
+            if ($search_value) // if datatable send POST for search
             {
 
                 if ($i === 0) // first loop
                 {
                     $this->db->group_start(); // open bracket. query Where with OR clause better with bracket. because maybe can combine with other WHERE with AND.
-                    $this->db->like($item, $this->input->post('search')['value']);
+                    $this->db->like($item, $search_value);
                 } else {
-                    $this->db->or_like($item, $this->input->post('search')['value']);
+                    $this->db->or_like($item, $search_value);
                 }
 
                 if (count($this->column_search) - 1 == $i) //last loop
@@ -630,9 +649,10 @@ public function get_id_by_tid($tid_string)
     }
 	
 	function get_totalsalse(){
-		
+
         $this->db->from($this->table);
 		 $this->db->where('orders.is_deleted', 0);
+		$this->_apply_creator_filter($this->aauth->get_user()->id);
 		 if ($this->input->post('start_date') && $this->input->post('end_date')) // if datatable send POST for search
         {
             $this->db->where('DATE(orders.date_added) >=', datefordatabase($this->input->post('start_date')));
@@ -641,21 +661,23 @@ public function get_id_by_tid($tid_string)
 		if ($this->input->post('txttype') && $this->input->post('txttype') !='All') // if datatable send POST for search
         {
            
-            $this->db->where('status', $this->input->post('txttype'));
+            $this->db->where('orders.status', $this->input->post('txttype'));
         }
 		 $i = 0;
 		
+        $search = $this->input->post('search');
+        $search_value = is_array($search) ? ($search['value'] ?? '') : '';
 		  foreach ($this->column_search as $item) // loop column
         {
-            if ($this->input->post('search')['value']) // if datatable send POST for search
+            if ($search_value) // if datatable send POST for search
             {
 
                 if ($i === 0) // first loop
                 {
                     $this->db->group_start(); // open bracket. query Where with OR clause better with bracket. because maybe can combine with other WHERE with AND.
-                    $this->db->like($item, $this->input->post('search')['value']);
+                    $this->db->like($item, $search_value);
                 } else {
-                    $this->db->or_like($item, $this->input->post('search')['value']);
+                    $this->db->or_like($item, $search_value);
                 }
 
                 if (count($this->column_search) - 1 == $i) //last loop

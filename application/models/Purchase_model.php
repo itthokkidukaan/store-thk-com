@@ -32,10 +32,21 @@ class Purchase_model extends CI_Model
         $this->db->select('*');
         $this->db->from('geopos_warehouse');
         if ($this->aauth->get_user()->loc) {
+            $this->db->group_start();
             $this->db->where('loc', $this->aauth->get_user()->loc);
             if (BDATA) $this->db->or_where('loc', 0);
+            $this->db->group_end();
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
+        }
+        if (function_exists('is_seller_user') && is_seller_user()) {
+            $seller_id = (int)$this->session->userdata('user_id');
+            $this->db->group_start();
+            $this->db->where('id', 1);
+            if ($this->db->field_exists('created_by', 'geopos_warehouse')) {
+                $this->db->or_where('created_by', $seller_id);
+            }
+            $this->db->group_end();
         }
         $query = $this->db->get();
         return $query->result_array();
@@ -78,6 +89,9 @@ class Purchase_model extends CI_Model
     {
         $this->db->select('id, name, phone');
         $this->db->from('geopos_supplier');
+        if (function_exists('is_seller_user') && is_seller_user() && $this->db->field_exists('eid', 'geopos_supplier')) {
+            $this->db->where('eid', (int)$this->session->userdata('user_id'));
+        }
         $this->db->order_by('name', 'ASC');
         $query = $this->db->get();
         return $query->result_array();
@@ -504,11 +518,15 @@ public function get_supplier_challan_datatables()
     return $query->result();
 }
 
-private function _sq_get_datatables_query()
+private function _sq_get_datatables_query($count_only = false)
 {
-    $this->db->select("sq.*, s.name as supplier_name,
+    if ($count_only) {
+        $this->db->select('sq.id');
+    } else {
+        $this->db->select("sq.*, s.name as supplier_name,
         (SELECT COUNT(*) FROM seller_quotation_items sqi WHERE sqi.order_id = sq.id) as total_item,
         (SELECT COUNT(*) FROM seller_quotation_items sqi WHERE sqi.order_id = sq.id AND sqi.fill_rate IS NOT NULL) as fill_item");
+    }
     $this->db->from('seller_quotation sq');
     $this->db->join('geopos_supplier s', 's.id = sq.supplier_id', 'left');
 
@@ -544,17 +562,15 @@ private function _sq_get_datatables_query()
 
 public function count_filtered_supplier_quotation()
 {
-    $this->_sq_get_datatables_query();
-    $query = $this->db->get();
-    return $query->num_rows();
+    $this->_sq_get_datatables_query(true);
+    return $this->db->count_all_results();
 }
 
 public function count_filtered_supplier_challan()
 {
-    $this->_sq_get_datatables_query();
+    $this->_sq_get_datatables_query(true);
 	 $this->db->where("sq.adm_status", 1);
-    $query = $this->db->get();
-    return $query->num_rows();
+    return $this->db->count_all_results();
 }
 
 public function count_all_supplier_quotation()

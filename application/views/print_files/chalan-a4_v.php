@@ -240,21 +240,28 @@
 
 
     <br>
+    <?php
+    $seller_loc = invoice_seller_branding($invoice['eid'] ?? 0);
+    $info_loc = $seller_loc ?: invoice_company_details($invoice['loc']);
+    ?>
     <table class="party">
         <thead>
         <tr class="heading">
-            <td> <?php echo $this->lang->line('Our Info') ?>:</td>
+            <td> <?php echo $seller_loc ? 'Seller' : $this->lang->line('Our Info') ?>:</td>
             <td><?= $general['person'] ?>:</td>
             <td>Challan Detail:</td>
         </tr>
         </thead>
         <tbody>
         <tr>
-            <td><strong><?php $loc = location($invoice['loc']);
-                    echo $loc['cname']; ?></strong><br>
+            <td>
+                <?php if ($seller_loc && !empty($seller_loc['logo_path'])) { ?>
+                    <img src="<?= FCPATH . $seller_loc['logo_path'] ?>" style="max-height:50px;max-width:120px;" alt=""><br>
+                <?php } ?>
+                <strong><?php echo $info_loc['cname']; ?></strong><br>
                 <?php echo
-                    $loc['address'] . '<br>' . $loc['city'] . ', ' . $loc['region'] . '<br>' . $loc['country'] . ' -  ' . $loc['postbox'] . '<br>' . $this->lang->line('Phone') . ': ' . $loc['phone'] . '<br> ' . $this->lang->line('Email') . ': ' . $loc['email'];
-                if ($loc['taxid']) echo '<br>' . $this->lang->line('TaxID') . ': ' . $loc['taxid'];
+                    $info_loc['address'] . '<br>' . $info_loc['city'] . ', ' . $info_loc['region'] . '<br>' . $info_loc['country'] . ' -  ' . $info_loc['postbox'] . '<br>' . $this->lang->line('Phone') . ': ' . $info_loc['phone'] . '<br> ' . $this->lang->line('Email') . ': ' . $info_loc['email'];
+                if ($info_loc['taxid']) echo '<br>' . $this->lang->line('TaxID') . ': ' . $info_loc['taxid'];
                 ?>
                 <?php if (!empty($employee['name'])) { ?>
                     <br><br><strong>Seller Details:</strong><br>
@@ -506,15 +513,23 @@ echo '</td></tr>';
   //  echo amountExchange($rming, $invoice['multi'], $invoice['loc']);
  
   echo amountExchange(0.00, $invoice['multi'], $invoice['loc']);
+    if ($seller_loc && !empty($seller_loc['bank_name'])) {
+        $bank_details_html = '<b>Payee:</b> ' . htmlspecialchars($seller_loc['account_name']) . ' <br/>'
+            . '<b>Ac No:</b> ' . htmlspecialchars($seller_loc['account_number']) . ' <br/>'
+            . '<b>IFSC:</b> ' . htmlspecialchars($seller_loc['bank_code']) . ' <br/>'
+            . '<b>Bank:</b> ' . htmlspecialchars($seller_loc['bank_name']);
+        $bank_qr_html = '';
+    } else {
+        $bank_details_html = '<b>Payee:</b> Thok ki Dukaan <br/>'
+            . '<b>Ac No:</b> 8546622014 <br/>'
+            . '<b>IFSC:</b> KKBK0005171 <br/>'
+            . '<b>Branch:</b> Nehru Colony <br/>'
+            . '<b>Bank:</b> kotak mahindra bank';
+        $bank_qr_html = '<img src="' . FCPATH . 'userfiles/bank/thokidukan.jpg"  border="0" height="100" alt="">';
+    }
    echo '</strong></td>
 		</tr>
-		</table><br><table><tr class="heading"><td>Account Details</td><td>QR Code</td></tr><tr><td>
-<b>Payee:</b> Thok ki Dukaan <br/>
-<b>Ac No:</b> 8546622014 <br/>
-<b>IFSC:</b> KKBK0005171 <br/>
-<b>Branch:</b> Nehru Colony <br/>
-<b>Bank:</b> kotak mahindra bank 
-</td><td><img src="' . FCPATH . 'userfiles/bank/thokidukan.jpg"  border="0" height="100" alt=""></td></tr></table><div class="sign">' . $this->lang->line('Authorized person') . '</div><div class="sign1"><img src="' . FCPATH . 'userfiles/employee_sign/' . $employee['sign'] . '" width="160" height="50" border="0" alt=""></div><div class="sign2">(' . $employee['name'] . ')</div><div class="terms">' . $invoice['notes'] . '<hr><strong>' . $this->lang->line('Terms') . ':</strong><br>';
+		</table><br><table><tr class="heading"><td>Account Details</td><td>QR Code</td></tr><tr><td>' . $bank_details_html . '</td><td>' . $bank_qr_html . '</td></tr></table><div class="sign">' . $this->lang->line('Authorized person') . '</div><div class="sign1"><img src="' . FCPATH . 'userfiles/employee_sign/' . $employee['sign'] . '" width="160" height="50" border="0" alt=""></div><div class="sign2">(' . $employee['name'] . ')</div><div class="terms">' . $invoice['notes'] . '<hr><strong>' . $this->lang->line('Terms') . ':</strong><br>';
 
     echo '<strong>' . $invoice['termtit'] . '</strong><br>' . $invoice['terms'];
     ?></div>

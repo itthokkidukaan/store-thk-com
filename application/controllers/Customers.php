@@ -46,7 +46,7 @@ class Customers extends CI_Controller
             if ($this->has_customer_permission('read') || $this->has_customer_permission('update')) {
                 return $customer;
             }
-            if ((int)$customer['assigned'] !== (int)$this->session->userdata('user_id')) {
+            if ((int)$customer['assigned_seller'] !== (int)$this->session->userdata('user_id')) {
                 return [];
             }
         }
@@ -107,6 +107,7 @@ class Customers extends CI_Controller
      //   $data['customergroup'] = $this->customers->group_info($data['details']['gid']);
         $data['money'] = $this->customers->money_details($custid);
         $data['due'] = $this->customers->due_details($custid);
+        $data['pending'] = $this->customers->pending_amount($custid);
         $head['usernm'] = $this->aauth->get_user()->username;
         $data['activity'] = $this->customers->activity($custid);
         $data['custom_fields'] = $this->custom->view_fields_data($custid, 1);

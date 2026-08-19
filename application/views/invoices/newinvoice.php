@@ -432,28 +432,25 @@ function validateSinglePrice(index) {
 
 // Bind change events on all price fields
 function bindPriceChangeEvents() {
-    let index = 0;
-
-    while (document.getElementById(`price-${index}`)) {
-        const priceInput = document.getElementById(`price-${index}`);
+    document.querySelectorAll('input[id^="price-"]').forEach(function (priceInput) {
+        const index = priceInput.id.substring("price-".length);
         if (!priceInput.dataset.bound) {
             priceInput.addEventListener("input", function () {
                 validateSinglePrice(index);
             });
             priceInput.dataset.bound = "true"; // Prevent duplicate binding
         }
-        index++;
-    }
+    });
 }
 
 // Validate all prices before submit
 function validateAllPricesBeforeSubmit() {
     let valid = true;
-    let index = 0;
 
-    while (document.getElementById(`price-${index}`)) {
-        const priceInput = document.getElementById(`price-${index}`);
+    document.querySelectorAll('input[id^="price-"]').forEach(function (priceInput) {
+        const index = priceInput.id.substring("price-".length);
         const purPriceInput = document.getElementById(`prodpurprice-${index}`);
+        if (!purPriceInput) return;
 
         const price = parseFloat(priceInput.value) || 0;
         const purPrice = parseFloat(purPriceInput.value) || 0;
@@ -464,9 +461,7 @@ function validateAllPricesBeforeSubmit() {
         } else {
             priceInput.classList.remove("price-error");
         }
-
-        index++;
-    }
+    });
 
     return valid;
 }

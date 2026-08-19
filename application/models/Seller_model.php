@@ -36,11 +36,16 @@ class Seller_model extends CI_Model
             'commission' => (isset($data['global_commission']) && $data['global_commission'] != "") ? $data['global_commission'] : 0,
             'category_ids' => (isset($data['categories']) && $data['categories'] != "") ? $data['categories'] : null,
             'permissions' => (isset($data['permissions']) && $data['permissions'] != "") ? json_encode($data['permissions']) : null,
-            'slug' => $data['slug']
+            'slug' => $data['slug'],
+            'authorized_signature' => ''
         ];
         if (isset($data['categories']) && $data['categories'] == "seller_profile") {
             unset($seller_data['category_ids']);
             unset($seller_data['permissions']);
+        }
+        if (isset($data['edit_seller_data_id'])) {
+            // authorized_signature is only defaulted on creation; never overwrite it on edit
+            unset($seller_data['authorized_signature']);
         }
 
         if (!empty($profile)) {

@@ -101,10 +101,11 @@ class Search_products extends CI_Controller
         }
 
         $product_count = $count_res->get('products p')->result_array();
-        $search_res = $this->db->select('product_variants.id AS id,  c.name as category_name,sd.store_name, p.id as pid,  p.rating,p.no_of_ratings ,p.name, p.article, p.type,p.product_price as sellprice,  p.image, p.status, p.purchase_price , product_variants.price , product_variants.special_price, product_variants.stock')
+        $search_res = $this->db->select('product_variants.id AS id,  c.name as category_name,sd.store_name, p.id as pid,  p.rating,p.no_of_ratings ,p.name, p.article, p.type,p.product_price as sellprice,  p.image, p.status, p.purchase_price , product_variants.price , product_variants.special_price, product_variants.stock, tax.percentage as tax_percentage')
             ->join("categories c", "p.category_id=c.id")
             ->join("seller_data sd", "sd.user_id=p.seller_id ", 'left')
-            ->join('product_variants', 'product_variants.product_id = p.id');
+            ->join('product_variants', 'product_variants.product_id = p.id')
+            ->join('taxes tax', 'tax.id = p.tax', 'left');
         if (isset($multipleWhere) && !empty($multipleWhere)) {
             $search_res->group_Start();
             $search_res->or_like($multipleWhere);
@@ -163,9 +164,10 @@ class Search_products extends CI_Controller
         $search_term = trim($this->input->post('name_startsWith', true));
         if ($search_term != '' && strlen($search_term) >= 6) {
             // 1. Search in product_barcode_info for exact or prefix match on article_no, hpnumber, or print_name using raw SQL
-            $sql1 = "SELECT pb.*, p.name as product_name, p.purchase_price, p.type, pv.id as variant_id, pv.price as variant_price, pv.special_price, pv.stock as variant_stock, pv.margin_percent, pv.margin_type, pv.disc_percent
+            $sql1 = "SELECT pb.*, p.name as product_name, p.purchase_price, p.type, tax.percentage as tax_percentage, pv.id as variant_id, pv.price as variant_price, pv.special_price, pv.stock as variant_stock, pv.margin_percent, pv.margin_type, pv.disc_percent, pv.purchase_price as variant_purchase_price, pv.packing_price as variant_packing_price
                      FROM product_barcode_info pb
                      JOIN products p ON pb.product_id = p.id
+                     LEFT JOIN taxes tax ON tax.id = p.tax
                      LEFT JOIN product_variants pv ON pv.product_id = pb.product_id AND EXISTS(SELECT 1 FROM attribute_values av WHERE av.id = pv.attribute_value_ids AND av.value = pb.UOM)
                      WHERE (pb.article_no = ? OR pb.hpnumber = ? OR pb.print_name = ? OR pb.print_name LIKE ?)";
             $sql1_params = array($search_term, $search_term, $search_term, $search_term . '%');
@@ -181,9 +183,10 @@ class Search_products extends CI_Controller
 
             if (empty($direct_matches)) {
                 // 2. Search in product_variants for exact or prefix match on sku, joining barcode info using raw SQL
-                $sql2 = "SELECT pv.id as variant_id, pv.price as variant_price, pv.special_price, pv.stock as variant_stock, pv.margin_percent, pv.margin_type, pv.disc_percent, pv.sku as variant_sku, p.id as product_id, p.name as product_name, p.purchase_price, p.type, av.value as UOM, pb.print_name, pb.article_no, pb.hpnumber
+                $sql2 = "SELECT pv.id as variant_id, pv.price as variant_price, pv.special_price, pv.stock as variant_stock, pv.margin_percent, pv.margin_type, pv.disc_percent, pv.purchase_price as variant_purchase_price, pv.packing_price as variant_packing_price, pv.sku as variant_sku, p.id as product_id, p.name as product_name, p.purchase_price, p.type, tax.percentage as tax_percentage, av.value as UOM, pb.print_name, pb.article_no, pb.hpnumber
                          FROM product_variants pv
                          JOIN products p ON pv.product_id = p.id
+                         LEFT JOIN taxes tax ON tax.id = p.tax
                          LEFT JOIN attribute_values av ON av.id = pv.attribute_value_ids
                          LEFT JOIN product_barcode_info pb ON pb.product_id = pv.product_id AND pb.UOM = av.value
                          WHERE (pv.sku = ? OR pv.sku LIKE ?)";
@@ -202,10 +205,15 @@ class Search_products extends CI_Controller
             if (!empty($direct_matches)) {
                 foreach ($direct_matches as $dm) {
                     $uom = !empty($dm['UOM']) ? $dm['UOM'] : 'pc';
-                    $con = convert_to_base_unit($uom);
-                    $puprice = $con['qty'] * $dm['purchase_price']; 
-                    $pacprice = isset($dm['packing_price']) ? $dm['packing_price'] : 0;
-                    $margin = isset($dm['margin_percent']) ? $dm['margin_percent'] : 0;	
+                    if (isset($dm['variant_purchase_price']) && $dm['variant_purchase_price'] !== null) {
+                        // Per-variant purchase price already represents the cost for this UOM/pack size
+                        $puprice = (float)$dm['variant_purchase_price'];
+                    } else {
+                        $con = convert_to_base_unit($uom);
+                        $puprice = $con['qty'] * $dm['purchase_price'];
+                    }
+                    $pacprice = isset($dm['variant_packing_price']) ? (float)$dm['variant_packing_price'] : 0;
+                    $margin = isset($dm['margin_percent']) ? $dm['margin_percent'] : 0;
                     $margintype = isset($dm['margin_type']) ? $dm['margin_type'] : '';
 
                     if ($margintype == 'Fixed') {
@@ -217,6 +225,10 @@ class Search_products extends CI_Controller
                     }
                     $papupri = $puprice + $pacprice;
                     $final_product_price = $price_with_margin + $pacprice;
+                    $disc_percent = isset($dm['disc_percent']) ? (float)$dm['disc_percent'] : 0;
+                    $dynamic_special_price = ($price_with_margin - ($price_with_margin * $disc_percent / 100)) + $pacprice;
+
+                    $sell_rate = ($dynamic_special_price > 0 && $dynamic_special_price < $final_product_price) ? $dynamic_special_price : $final_product_price;
 
                     $printname = !empty($dm['print_name']) ? $dm['print_name'] : $dm['product_name'];
                     $article = !empty($dm['article_no']) ? $dm['article_no'] : (!empty($dm['variant_sku']) ? $dm['variant_sku'] : '');
@@ -224,14 +236,15 @@ class Search_products extends CI_Controller
                     $variant_id = !empty($dm['variant_id']) ? $dm['variant_id'] : 0;
                     $stock = isset($dm['variant_stock']) ? $dm['variant_stock'] : 0;
 
-                    $unit_opt = '<option value="'.$uom.'" varId="'.$variant_id.'" propur="'.$papupri.'" purchase="'.number_format($final_product_price, 2).'" margin="'.$margin.'" disc="'.(isset($dm['disc_percent']) ? $dm['disc_percent'] : 0).'" stock="'.$stock.'" printname="'.$printname.'" productarticle="'.$article.'" hpnumber="'.$hpnumber.'" selected>'.$uom.'</option>';
+                    $unit_opt = '<option value="'.$uom.'" varId="'.$variant_id.'" propur="'.$papupri.'" purchase="'.number_format($sell_rate, 2).'" margin="'.$margin.'" disc="'.(isset($dm['disc_percent']) ? $dm['disc_percent'] : 0).'" stock="'.$stock.'" printname="'.$printname.'" productarticle="'.$article.'" hpnumber="'.$hpnumber.'" selected>'.$uom.'</option>';
+                    $tax_percentage = isset($dm['tax_percentage']) ? $dm['tax_percentage'] : 0;
 
                     $out[] = array(
-                        $printname . ' (' . $uom . ') [Variant]', 
-                        number_format($final_product_price, 2), 
-                        $dm['product_id'], 
-                        '', 
-                        '', 
+                        $printname . ' (' . $uom . ') [Variant]',
+                        number_format($sell_rate, 2),
+                        $dm['product_id'],
+                        $tax_percentage,
+                        '',
                         $stock, 
                         $unit_opt, 
                         '', 
@@ -275,11 +288,15 @@ class Search_products extends CI_Controller
 			 foreach ($results as $rows) {
 				
 				
-			$con =	convert_to_base_unit($rows['value']);
-				 
-				$puprice = $con['qty'] * $row['purchase_price']; 
-$pacprice = $row['packing_price'];
-$margin = $rows['margin_percent'];	
+			if (isset($rows['purchase_price']) && $rows['purchase_price'] !== null) {
+				// Per-variant purchase price already represents the cost for this UOM/pack size
+				$puprice = (float)$rows['purchase_price'];
+			} else {
+				$con = convert_to_base_unit($rows['value']);
+				$puprice = $con['qty'] * $row['purchase_price'];
+			}
+$pacprice = isset($rows['packing_price']) ? (float)$rows['packing_price'] : 0;
+$margin = $rows['margin_percent'];
 $margintype = $rows['margin_type'];
 
 if ($margintype == 'Fixed') {
@@ -291,8 +308,12 @@ if ($margintype == 'Fixed') {
     $price_with_margin = $puprice;
 }
 $papupri= $puprice+$pacprice;
-$final_product_price = $price_with_margin + $pacprice;	
-				 
+$final_product_price = $price_with_margin + $pacprice;
+$disc_percent = isset($rows['disc_percent']) ? (float)$rows['disc_percent'] : 0;
+$dynamic_special_price = ($price_with_margin - ($price_with_margin * $disc_percent / 100)) + $pacprice;
+
+$sell_rate = ($dynamic_special_price > 0 && $dynamic_special_price < $final_product_price) ? $dynamic_special_price : $final_product_price;
+
 				 
 				 // Query product_barcode_info to get the correct print_name, article_no, and hpnumber for this variant
 				 $barcode_info = $this->db->get_where('product_barcode_info', [
@@ -316,11 +337,12 @@ $final_product_price = $price_with_margin + $pacprice;
 				 // Only add unit if this variant hasn't been added yet
 				 if (!in_array($rows['id'], $units_added)) {
 					 $units_added[] = $rows['id'];
-					 $unit .= '<option varId="'.$rows['id'].'" propur="'.$papupri.'" purchase="'.number_format($final_product_price, 2).'"  margin="'.$rows['margin_percent'].'" disc="'.$rows['disc_percent'].'" stock="'.$rows['stock'].'" printname="'.$printname.'" productarticle="'.$article.'" hpnumber="'.$hpnumber.'">'. $rows['value'].'</option>';
+					 $unit .= '<option value="'.$rows['value'].'" varId="'.$rows['id'].'" propur="'.$papupri.'" purchase="'.number_format($sell_rate, 2).'"  margin="'.$rows['margin_percent'].'" disc="'.$rows['disc_percent'].'" stock="'.$rows['stock'].'" printname="'.$printname.'" productarticle="'.$article.'" hpnumber="'.$hpnumber.'">'. $rows['value'].'</option>';
 				 }
 			 }
 			 
-            $name = array($row['name'], '', $row['pid'], '', '', $row['stock'], $unit, $row_num, $row['type']);
+            $tax_percentage = isset($row['tax_percentage']) ? $row['tax_percentage'] : 0;
+            $name = array($row['name'], '', $row['pid'], $tax_percentage, '', $row['stock'], $unit, $row_num, $row['type']);
             array_push($out, $name);
         }
 
@@ -734,15 +756,30 @@ public function mysupplier()
         $whr = ' (loc=0) AND ';
     }
 
+    $seller_whr = '';
+    $params = [];
+    $related_sellers = array_values(array_filter(array_map('intval', explode(',', (string)$this->input->get('related_sellers', true)))));
+    if (!empty($related_sellers) && $this->db->field_exists('eid', 'geopos_supplier')) {
+        // Scope to the sellers actually related to the items being converted (e.g. the indent page).
+        $placeholders = implode(',', array_fill(0, count($related_sellers), '?'));
+        $seller_whr = ' AND eid IN (' . $placeholders . ') ';
+        $params = $related_sellers;
+    } elseif (function_exists('is_seller_user') && is_seller_user() && $this->db->field_exists('eid', 'geopos_supplier')) {
+        $seller_whr = ' AND eid = ? ';
+        $params[] = (int)$this->session->userdata('user_id');
+    }
+
     if ($name) {
+        $params = array_merge(['%' . strtoupper($name) . '%', strtoupper($name) . '%'], $params);
         $query = $this->db->query("
-            SELECT id, name, address, city, phone, email 
-            FROM geopos_supplier 
-            WHERE $whr 
-            (UPPER(name) LIKE '%" . strtoupper($name) . "%' 
-            OR UPPER(phone) LIKE '" . strtoupper($name) . "%') 
+            SELECT id, name, address, city, phone, email
+            FROM geopos_supplier
+            WHERE $whr
+            (UPPER(name) LIKE ?
+            OR UPPER(phone) LIKE ?)
+            $seller_whr
             LIMIT 6
-        ");
+        ", $params);
         $result = $query->result_array();
 
         if (!empty($result)) {
@@ -1192,11 +1229,11 @@ if($flag_p) {
             $search_res->group_End();
         }
         if (isset($seller_id) && $seller_id != "") {
-            $count_res->where("p.seller_id", $seller_id);
+            $search_res->where("p.seller_id", $seller_id);
         }
 
         if (isset($p_status) && $p_status != "") {
-            $count_res->where("p.status", $p_status);
+            $search_res->where("p.status", $p_status);
         }
         $out = array();
         $row_num ='';
@@ -1240,8 +1277,46 @@ if($flag_p) {
     } */ 
 	
 	
+	private function get_latest_purchase_rate($product_id, $variant_id = 0)
+    {
+        // Mirrors Products::get_purchase_price_history() (used by productcategory/viewwarehouse)
+        // so the Rate shown here matches the "Purchase Price" / "Updated Price" columns there.
+        $this->db->select('purchage_rate');
+        $this->db->from('product_ledger');
+        $this->db->where('product_id', $product_id);
+        $this->db->where('purchage_rate !=', 0);
+        $this->db->order_by('created_date', 'ASC');
+        $this->db->order_by('id', 'ASC');
+        $this->db->limit(1);
+        $first_row = $this->db->get()->row_array();
+        $first_price = isset($first_row['purchage_rate']) ? (float)$first_row['purchage_rate'] : 0;
+
+        $this->db->select('purchage_rate, ledger_type');
+        $this->db->from('product_ledger');
+        $this->db->where('product_id', $product_id);
+        $this->db->where('purchage_rate !=', 0);
+        $this->db->order_by('created_date', 'DESC');
+        $this->db->order_by('id', 'DESC');
+        $this->db->limit(1);
+        $last_row = $this->db->get()->row_array();
+
+        $updated_price = 0;
+        if (isset($last_row['purchage_rate'])) {
+            $latest = (float)$last_row['purchage_rate'];
+            if ($last_row['ledger_type'] === 'Price Update' || $latest != $first_price) {
+                $updated_price = $latest;
+            }
+        }
+
+        return $updated_price > 0 ? $updated_price : $first_price;
+    }
+
 	public function puchase_search($flag = NULL, $seller_id = NULL, $p_status = NULL)
     {
+        $wid = (int)$this->input->post('wid', true);
+        if (function_exists('is_seller_user') && is_seller_user()) {
+            $seller_id = (int)$this->session->userdata('user_id');
+        }
         $settings = get_settings('system_settings', true);
         $low_stock_limit = isset($settings['low_stock_limit']) ? $settings['low_stock_limit'] : 5;
         $offset = 0;
@@ -1284,8 +1359,9 @@ if($flag_p) {
         if (isset($p_status) && $p_status != "") {
             $count_res->where("p.status", $p_status);
         }
-
-   
+        if ($wid > 0) {
+            $count_res->where("p.warehouse", $wid);
+        }
 
         if (isset($category_id) && !empty($category_id)) {
             $count_res->group_Start();
@@ -1295,8 +1371,9 @@ if($flag_p) {
         }
 
         $product_count = $count_res->get('products p')->result_array();
-        $search_res = $this->db->select('product_variants.id AS id,  c.name as category_name,sd.store_name, p.id as pid,p.rating,p.no_of_ratings,p.name, p.type, p.image, p.status,product_variants.price , product_variants.special_price, product_variants.stock, product_variants.margin_type, p.stock as prostock, p.purchase_price as mpurchaseprice')
+        $search_res = $this->db->select('product_variants.id AS id,  c.name as category_name,sd.store_name, p.id as pid,p.rating,p.no_of_ratings,p.name, p.type, p.image, p.status,product_variants.price , product_variants.special_price, product_variants.stock, product_variants.margin_type, p.stock as prostock, p.purchase_price as mpurchaseprice, p.short_description, tax.percentage as tax_percentage')
             ->join("categories c", "p.category_id=c.id")
+            ->join("taxes tax", "tax.id = p.tax", "left")
             ->join("seller_data sd", "sd.user_id=p.seller_id ", 'left')
             ->join('product_variants', 'product_variants.product_id = p.id');
         if (isset($multipleWhere) && !empty($multipleWhere)) {
@@ -1340,11 +1417,14 @@ if($flag_p) {
             $search_res->group_End();
         }
         if (isset($seller_id) && $seller_id != "") {
-            $count_res->where("p.seller_id", $seller_id);
+            $search_res->where("p.seller_id", $seller_id);
         }
 
         if (isset($p_status) && $p_status != "") {
-            $count_res->where("p.status", $p_status);
+            $search_res->where("p.status", $p_status);
+        }
+        if ($wid > 0) {
+            $search_res->where("p.warehouse", $wid);
         }
         $out = array();
         $row_num ='';
@@ -1383,22 +1463,31 @@ if($flag_p) {
 					 // Only add Peace if not already added
 					 if (!in_array('PEACE', $units_added)) {
 						 $units_added[] = 'PEACE';
-						 $unit .= '<option varId="'.$rows['id'].'" purchase="'.$row['mpurchaseprice'].'" margintype="'.$rows['margin_type'].'"  margin="'.$rows['margin_percent'].'"  disc="'.$rows['disc_percent'].'" stock="'.$rows['stock'].'" >Peace</option>';
+						 $latest_rate = $this->get_latest_purchase_rate($row['pid'], $rows['id']);
+						 if ($latest_rate <= 0) {
+							 $latest_rate = (float)$row['mpurchaseprice'];
+						 }
+						 $unit .= '<option value="Peace" varId="'.$rows['id'].'" purchase="'.number_format($latest_rate, 2).'" margintype="'.$rows['margin_type'].'"  margin="'.$rows['margin_percent'].'"  disc="'.$rows['disc_percent'].'" stock="'.$rows['stock'].'" >Peace</option>';
 					 }
 				 }else{
-					 // Use convert_to_base_unit to extract just the unit name (KG, pc, etc.)
-					 $converted = convert_to_base_unit($rows['value']);
-					 $display_unit = strtoupper($converted['unit']);
-					 
-					 // Only add unit if it hasn't been added yet
-					 if (!in_array($display_unit, $units_added)) {
-						 $units_added[] = $display_unit;
-						 $unit .= '<option varId="'.$rows['id'].'" purchase="'.$rows['special_price'].'" margintype="'.$rows['margin_type'].'" margin="'.$rows['margin_percent'].'" disc="'.$rows['disc_percent'].'" stock="'.$rows['stock'].'" >'. $display_unit.'</option>';
+					 // Keep each pack size (e.g. 1Kg, 2Kg) as its own selectable option
+					 $display_unit = $rows['value'];
+
+					 // Only add unit if this variant hasn't been added yet
+					 if (!in_array($rows['id'], $units_added)) {
+						 $units_added[] = $rows['id'];
+						 $latest_rate = $this->get_latest_purchase_rate($row['pid'], $rows['id']);
+						 if ($latest_rate <= 0) {
+							 $latest_rate = (float)$row['mpurchaseprice'];
+						 }
+						 $unit .= '<option value="'.$display_unit.'" varId="'.$rows['id'].'" purchase="'.number_format($latest_rate, 2).'" margintype="'.$rows['margin_type'].'" margin="'.$rows['margin_percent'].'" disc="'.$rows['disc_percent'].'" stock="'.$rows['stock'].'" >'. $display_unit.'</option>';
 					 }
 				 }
 			}
-			 
-            $name = array($row['name'], '', $row['pid'], '', '', $row['prostock'], $unit, $row_num, $row['type']);
+
+            $tax_percentage = isset($row['tax_percentage']) ? $row['tax_percentage'] : 0;
+            $description = isset($row['short_description']) ? $row['short_description'] : '';
+            $name = array($row['name'], '', $row['pid'], $tax_percentage, '', $description, $unit, $row_num, $row['type']);
             array_push($out, $name);
         }
 

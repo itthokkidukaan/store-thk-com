@@ -25,11 +25,11 @@
                                 <div class="form-group row">
                                     <div class="frmSearch col-sm-12"><label for="cst"
                                                                             class="caption"><?php echo $this->lang->line('Search Supplier') ?></label>
-                                        <input type="text" class="form-control" name="cst" id="customer-box"
-                                               placeholder="Enter Customer Name or Mobile Number to search"
+                                        <input type="text" class="form-control" name="cst" id="supplier-box"
+                                               placeholder="Enter Supplier Name or Phone Number to search"
                                                autocomplete="off"/>
 
-                                        <div id="customer-box-result"></div>
+                                        <div id="supplier-box-result"></div>
                                     </div>
 
                                 </div>
@@ -399,7 +399,7 @@
                 <!-- Modal Header -->
                 <div class="modal-header">
 
-                    <h4 class="modal-title" id="myModalLabel"><?php echo $this->lang->line('Add Customer') ?></h4>
+                    <h4 class="modal-title" id="myModalLabel"><?php echo $this->lang->line('Add Supplier') ?></h4>
                     <button type="button" class="close" data-dismiss="modal">
                         <span aria-hidden="true">&times;</span>
                         <span class="sr-only"><?php echo $this->lang->line('Close') ?></span>
@@ -523,16 +523,14 @@
                         <div class="col">
                             <h5><?php echo $this->lang->line('Shipping Address') ?></h5>
                             <div class="form-group row">
-
-                                <div class="custom-control custom-checkbox">
-                                    <input type="checkbox" class="custom-control-input" name="customer1s"
-                                           id="copy_address">
-                                    <label class="custom-control-label"
-                                           for="copy_address"><?php echo $this->lang->line('Same As Billing') ?></label>
-                                </div>
-
-                                <div class="col-sm-10">
-                                    <?php echo $this->lang->line("leave Shipping Address") ?>
+                                <div class="col-sm-12">
+                                    <label style="font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="customer1s" id="copy_address" style="width: 18px; height: 18px; cursor: pointer;">
+                                        <?php echo $this->lang->line('Same As Billing') ?>
+                                    </label>
+                                    <small class="form-text text-muted" style="margin-top: 5px; margin-left: 26px;">
+                                        <?php echo $this->lang->line("leave Shipping Address") ?>
+                                    </small>
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -615,7 +613,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default"
                             data-dismiss="modal"><?php echo $this->lang->line('Close') ?></button>
-                    <input type="submit" id="mclient_add" class="btn btn-primary submitBtn" value="ADD"/>
+                    <input type="submit" id="msupplier_add" class="btn btn-primary submitBtn" value="ADD"/>
                 </div>
             </form>
         </div>

@@ -168,6 +168,7 @@ $lang['Payment Status'] = "Payment Status";
 $lang['Payment Method'] = "Payment Method";
 $lang['Note'] = "Note";
 $lang['Total Due'] = "Total Due";
+$lang['Pending Amount'] = "Pending Amount";
 $lang['Sub Total'] = "Sub Total";
 $lang['Total'] = "Total";
 $lang['Payment Made'] = "Payment Made";

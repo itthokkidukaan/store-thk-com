@@ -48,6 +48,7 @@
                                         <input type="text" class="form-control" name="cst" id="mysupplier-box"
                                                placeholder="Enter Supplier Name or Mobile Number to search"
                                                autocomplete="off"/>
+                                        <input type="hidden" id="related_seller_ids" value="<?= implode(',', $related_seller_ids ?? []) ?>">
 
                                         <div id="mysupplier-box-result"></div>
                                     </div>
@@ -571,7 +572,7 @@ $("#mysupplier-box").keyup(function () {
     $.ajax({
         type: "GET",
         url: baseurl + 'search_products/mysupplier',
-        data: 'keyword=' + $(this).val() + '&' + crsf_token + '=' + crsf_hash,
+        data: 'keyword=' + $(this).val() + '&related_sellers=' + $('#related_seller_ids').val() + '&' + crsf_token + '=' + crsf_hash,
         beforeSend: function () {
             $("#mysupplier-box").css("background", "#FFF url(" + baseurl + "assets/custom/load-ring.gif) no-repeat 165px");
         },

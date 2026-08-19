@@ -33,7 +33,7 @@ class Customers_model extends CI_Model
             $this->db->select('users.*,SUM(orders.final_total) AS total,SUM(orders.total_payable) AS pamnt');
             $this->db->from('orders');
             $this->db->where('orders.status!=', 'paid');
-            $this->db->join('users', 'users.id = orders.csd', 'left');
+            $this->db->join('users', 'users.id = orders.user_id', 'left');
             if ($this->aauth->get_user()->loc) {
                 $this->db->where('users.loc', $this->aauth->get_user()->loc);
             } elseif (!BDATA) {
@@ -210,6 +210,20 @@ return $result; // Res
         $this->db->select('SUM(total) AS total,SUM(pamnt) AS pamnt,SUM(discount) AS discount,');
         $this->db->from('orders');
         $this->db->where('user_id', $custid);
+        $query = $this->db->get();
+        return $query->row_array();
+    }
+
+    public function pending_amount($custid)
+    {
+        $this->db->select('COALESCE(SUM(orders.pending_amount),0) as pending_amount');
+        $this->db->from('orders');
+        $this->db->where('orders.user_id', $custid);
+        $this->db->where('orders.status !=', 'canceled');
+        if (function_exists('is_seller_user') && is_seller_user()) {
+            $seller_id = (int)$this->session->userdata('user_id');
+            $this->db->where("orders.id IN (SELECT order_id FROM order_items WHERE seller_id = $seller_id)", NULL, FALSE);
+        }
         $query = $this->db->get();
         return $query->row_array();
     }

@@ -25,7 +25,7 @@ class Dashboard extends CI_Controller
 
     private function get_dashboard_seller_id()
     {
-        if ($this->ion_auth->is_seller()) {
+        if (is_seller_user()) {
             return (int)$this->session->userdata('user_id');
         }
 

@@ -51,8 +51,8 @@
     </style>
 </head>
 <body>
-<h3 id="logo" class="text-center"><br><img style="max-height:100px;" src='<?php $loc = location($invoice['loc']);
-    echo base_url('userfiles/company/' . $loc['logo']);
+<h3 id="logo" class="text-center"><br><img style="max-height:100px;" src='<?php $loc = invoice_company_details($invoice['loc']);
+    echo base_url($loc['logo_path']);
 
     ?>' alt='Logo'></h3>
 

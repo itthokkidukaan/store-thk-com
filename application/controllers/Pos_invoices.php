@@ -126,7 +126,7 @@ class Pos_invoices extends CI_Controller
         $head['usernm'] = $this->aauth->get_user()->username;
         $data['cat'] = $this->categories_model->category_list();
         $data['taxdetails'] = $this->common->taxdetail();
-        $data['acc_list'] = $this->invocies->accountslistpos();
+        $data['acc_list'] = $this->accounts->accountslist();
         $data['accnumber'] = $this->invocies->accountnumber();
 		if( $this->aauth->get_user()->id==1){
 			

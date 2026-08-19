@@ -593,12 +593,17 @@ function fetch_product($user_id = NULL, $filter = NULL, $id = NULL, $category_id
                         $tax_amount = $base_price * ($percentage / 100);
                         $final_price = $base_price + $tax_amount;
                     } else {
+                        $tax_amount = 0;
                         $final_price = $base_price;
                     }
-                    
+
                     // Set both price and special_price to final_price so frontend shows single price without strikethrough
                     $product[$i]['variants'][$k]['price'] = $final_price;
                     $product[$i]['variants'][$k]['special_price'] = $final_price;
+                    // Kept separately so the UI can show the special price / tax breakdown
+                    $product[$i]['variants'][$k]['base_price'] = round($base_price, 2);
+                    $product[$i]['variants'][$k]['tax_amount'] = round($tax_amount, 2);
+                    $product[$i]['variants'][$k]['tax_percentage'] = (float)$percentage;
                     if (isset($user_id) && $user_id != NULL) {
                         $user_cart_data = $t->db->select('qty as cart_count')->where(['product_variant_id' => $product[$i]['variants'][$k]['id'], 'user_id' => $user_id, 'is_saved_for_later' => 0])->get('cart')->result_array();
                         if (!empty($user_cart_data)) {
@@ -4478,16 +4483,82 @@ function labels($label, $alt = '')
 }
 
   function get_stock_by_product_id($product_id) {
-	  
+
 	   $t = &get_instance();
         $t->db->select('stock');
         $t->db->from('products');
         $t->db->where('id', $product_id);
         $query = $t->db->get();
-		return $query->row()->stock;
-      
+		$row = $query->row();
+		return ($row && $row->stock !== null) ? $row->stock : 0;
+
     }
-	
+
+    function get_live_product_stock($product_id, $product_variant_id)
+    {
+        $t = &get_instance();
+        $stock_type = $t->db->select('stock_type')->where('id', $product_id)->get('products')->row();
+        if ($stock_type && (int)$stock_type->stock_type == 2) {
+            $pv = $t->db->select('stock')->where('id', $product_variant_id)->get('product_variants')->row();
+            return ($pv && $pv->stock !== null) ? $pv->stock : 0;
+        }
+        return get_stock_by_product_id($product_id);
+    }
+
+    function sync_online_order_stock_ledger()
+    {
+        $t = &get_instance();
+
+        $rows = $t->db->select('oi.id, oi.order_id, oi.product_id, oi.product_variant_id, oi.product_name, oi.variant_name, oi.seller_id, oi.quantity, oi.sub_total, oi.price, o.user_id')
+            ->from('order_items oi')
+            ->join('orders o', 'o.id = oi.order_id')
+            ->where('o.orderdone_by NOT IN ("POS","Manual")', NULL, FALSE)
+            ->where('TRIM(oi.active_status) NOT IN ("cancelled","returned","awaiting","")', NULL, FALSE)
+            ->where('oi.active_status IS NOT NULL', NULL, FALSE)
+            ->where("NOT EXISTS (SELECT 1 FROM product_ledger pl WHERE pl.order_id = oi.order_id AND pl.product_variants = oi.product_variant_id AND pl.ledger_type = 'Sell')", NULL, FALSE)
+            ->get()->result_array();
+
+        foreach ($rows as $row) {
+            if (empty($row['product_variant_id'])) {
+                continue;
+            }
+
+            $product_id = $row['product_id'];
+            if (empty($product_id)) {
+                $variant = $t->db->select('product_id')->where('id', $row['product_variant_id'])->get('product_variants')->row();
+                $product_id = $variant ? $variant->product_id : 0;
+            }
+            if (empty($product_id)) {
+                continue;
+            }
+
+            $open_stock = get_live_product_stock($product_id, $row['product_variant_id']);
+            update_stock([$row['product_variant_id']], [$row['quantity']]);
+            $close_stock = get_live_product_stock($product_id, $row['product_variant_id']);
+
+            $t->db->insert('product_ledger', array(
+                'order_id' => $row['order_id'],
+                'product_id' => $product_id,
+                'product_variants' => $row['product_variant_id'],
+                'product_name' => $row['product_name'],
+                'unit' => $row['variant_name'],
+                'seller_id' => $row['seller_id'],
+                'customer_id' => $row['user_id'],
+                'sell_qty' => $row['quantity'],
+                'purchage_qty' => 0,
+                'sell_amount' => $row['sub_total'],
+                'purchage_amount' => 0,
+                'open_stock' => $open_stock,
+                'close_stock' => $close_stock,
+                'created_date' => date('Y-m-d H:i:s'),
+                'created_by' => 0,
+                'purchage_rate' => 0,
+                'sell_rate' => $row['price'],
+                'ledger_type' => 'Sell',
+            ));
+        }
+    }
+
 	function get_stock_by_product_name($product) {
 	  
 	   $t = &get_instance();

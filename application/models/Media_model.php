@@ -68,7 +68,10 @@ class Media_model extends CI_Model
             if (isset($_GET['type']) and $_GET['type'] != '') {
                 $where['type'] = trim(strtolower($_GET['type']));
             }
-            if (isset($_GET['seller_id']) && $_GET['seller_id'] != '') {
+            if (function_exists('is_seller_user') && is_seller_user()) {
+                // Sellers only ever see their own media; the GET param must not override this
+                $where['seller_id'] = (int)$this->session->userdata('user_id');
+            } elseif (isset($_GET['seller_id']) && $_GET['seller_id'] != '') {
                 $where['seller_id'] = $_GET['seller_id'];
             }
             $count_res = $this->db->select(' COUNT(id) as `total` ');
@@ -110,14 +113,14 @@ class Media_model extends CI_Model
             $tempRow = array();
 
             $i = 0;
+            $viewer_is_seller = function_exists('is_seller_user') && is_seller_user();
+            $viewer_id = (int)$this->session->userdata('user_id');
             foreach ($city_search_res as $row) {
                 $operate = "";
-               // if ($this->ion_auth->is_seller() && $row['seller_id'] == $this->session->userdata('user_id')) {
+                // Sellers may delete only their own media; other users keep full access
+                if (!$viewer_is_seller || $row['seller_id'] == $viewer_id) {
                     $operate = '<a href="javascript:void(0);" class="delete-media btn btn-danger btn-xs mr-1 mb-1" title="Delete" data-id="' . $row['id'] . '" ><i class="fa fa-trash"></i></a>';
-              //  }
-             //   if ($this->ion_auth->is_admin()) {
-                    $operate = '<a href="javascript:void(0);" class="delete-media btn btn-danger btn-xs mr-1 mb-1" title="Delete" data-id="' . $row['id'] . '" ><i class="fa fa-trash"></i></a>';
-               // }
+                }
                 $operate .= '<a href="javascript:void(0);" class="copy-to-clipboard btn btn-primary btn-xs mr-1 mb-1" title="Copy to clipboard" ><i class="fa fa-copy"></i></a>';
                 $operate .= "<a href='javascript:void(0);' class='btn btn-info btn-xs mr-1 mb-1 copy-relative-path' data-path=" . $row['sub_directory'] . $row['name'] . " title='Copy image path for csv file'><i class='fa fa-copy'></i></a>";
 

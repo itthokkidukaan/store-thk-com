@@ -181,21 +181,28 @@
 
 
     <br>
+    <?php
+    $seller_loc = invoice_seller_branding($invoice['eid'] ?? 0);
+    $info_loc = $seller_loc ?: invoice_company_details($invoice['loc']);
+    ?>
     <table class="party">
         <thead>
         <tr class="heading">
-            <td> <?php echo $this->lang->line('Our Info') ?>:</td>
+            <td> <?php echo $seller_loc ? 'Seller' : $this->lang->line('Our Info') ?>:</td>
 
             <td><?= $general['person'] ?>:</td>
         </tr>
         </thead>
         <tbody>
         <tr>
-            <td><strong><?php $loc = location($invoice['loc']);
-                    echo $loc['cname']; ?></strong><br>
+            <td>
+                <?php if ($seller_loc && !empty($seller_loc['logo_path'])) { ?>
+                    <img src="<?= FCPATH . $seller_loc['logo_path'] ?>" style="max-height:50px;max-width:120px;" alt=""><br>
+                <?php } ?>
+                <strong><?php echo $info_loc['cname']; ?></strong><br>
                 <?php echo
-                    $loc['address'] . '<br>' . $loc['city'] . ', ' . $loc['region'] . '<br>' . $loc['country'] . ' -  ' . $loc['postbox'] . '<br>' . $this->lang->line('Phone') . ': ' . $loc['phone'] . '<br> ' . $this->lang->line('Email') . ': ' . $loc['email'];
-                if ($loc['taxid']) echo '<br>' . $this->lang->line('GSTIN') . ' : ' . $loc['taxid'];
+                    $info_loc['address'] . '<br>' . $info_loc['city'] . ', ' . $info_loc['region'] . '<br>' . $info_loc['country'] . ' -  ' . $info_loc['postbox'] . '<br>' . $this->lang->line('Phone') . ': ' . $info_loc['phone'] . '<br> ' . $this->lang->line('Email') . ': ' . $info_loc['email'];
+                if ($info_loc['taxid']) echo '<br>' . $this->lang->line('GSTIN') . ' : ' . $info_loc['taxid'];
                 ?>
                 <?php if (!empty($employee['name'])) { ?>
                     <br><br><strong>Seller Details:</strong><br>

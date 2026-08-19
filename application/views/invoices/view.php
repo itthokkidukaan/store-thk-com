@@ -233,6 +233,9 @@ if($this->aauth->get_user()->id !=1){
                     </div>
                     <div class="offset-md-3 col-md-3 col-sm-12 text-xs-center text-md-left">
                         <?php echo '<p><span class="text-muted">' . $this->lang->line('Invoice Date') . '  :</span> ' . dateformat($invoice['date_added']) . '</p> <p><span class="text-muted">' . $this->lang->line('Due Date') . ' :</span> ' . dateformat($invoice['invoiceduedate']) . '</p>  <p><span class="text-muted">' . $this->lang->line('Terms') . ' :</span> ' . $invoice['termtit'] . '</p>';
+                        if (!empty($invoice['updated_at'])) {
+                            echo '<p><span class="text-muted">Last Edited :</span> ' . dateformat($invoice['updated_at']) . '</p>';
+                        }
                         ?>
                     </div>
                 </div>
@@ -390,8 +393,8 @@ foreach ($products as $row) {
             echo '<td><span style="color:red;">'.sprintf("%.2f",$margin_percent).'%</span></td>';
         }
         
-        echo '<td>' . amountExchange($row['totaltax'], 0, $this->aauth->get_user()->loc) . ' (' . amountFormat_s($row['tax']) . '%)</td>
-        <td>' . amountExchange($row['totaldiscount'], 0, $this->aauth->get_user()->loc) . ' (' . amountFormat_s($row['discount']) . $this->lang->line($invoice['format_discount']) . ')</td>
+        echo '<td>' . amountExchange($row['tax_amount'], 0, $this->aauth->get_user()->loc) . '</td>
+        <td>' . amountExchange($row['discount'], 0, $this->aauth->get_user()->loc) . '</td>
         <td>' . amountExchange($row['sub_total'], 0, $this->aauth->get_user()->loc) . '</td>';
         
         if($this->aauth->get_user()->roleid==1){
@@ -464,7 +467,7 @@ foreach ($products as $row) {
 
                     <tr>
                         <td><?php echo $this->lang->line('Tax') ?></td>
-                        <td class="text-xs-right"><?php echo amountExchange($invoice['tax'], 0, $this->aauth->get_user()->loc) ?></td>
+                        <td class="text-xs-right"><?php echo amountExchange($invoice['tax_amount'], 0, $this->aauth->get_user()->loc) ?></td>
                     </tr>
                     <tr>
                         <td><?php echo $this->lang->line('Discount') ?></td>

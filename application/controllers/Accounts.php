@@ -171,12 +171,18 @@ public function balancesheet()
     $head['usernm'] = $this->aauth->get_user()->username;
     $data['accounts'] = $this->accounts->accountslist();
 
+    $is_seller = function_exists('is_seller_user') && is_seller_user();
+    $seller_id = (int)$this->session->userdata('user_id');
+
     // ---------- Suppliers (LiabilitiesAccounts) ----------
-    $this->db->select('geopos_supplier.id, geopos_supplier.name, 
+    $this->db->select('geopos_supplier.id, geopos_supplier.name,
                        COALESCE(SUM(geopos_purchase.total - geopos_purchase.pamnt),0) as balance');
     $this->db->from('geopos_supplier');
     $this->db->join('geopos_purchase', 'geopos_supplier.id = geopos_purchase.csd', 'left');
     $this->db->where('geopos_purchase.status !=', 'canceled');
+    if ($is_seller) {
+        $this->db->where('geopos_purchase.eid', $seller_id);
+    }
     $this->db->group_by('geopos_supplier.id');
     $data['suppliers'] = $this->db->get()->result_array();
 
@@ -184,12 +190,38 @@ public function balancesheet()
     $this->db->reset_query();
 
     // ---------- Customers (IncomeAccounts) ----------
-    $this->db->select('users.id, users.username as name, 
-                       COALESCE(SUM(orders.pending_amount),0) as balance');
-    $this->db->from('users');
-    $this->db->join('orders', 'users.id = orders.user_id', 'left');
-    $this->db->where('orders.status !=', 'canceled');
-    $this->db->group_by('users.id');
+    // Real income received per customer, from the same transaction ledger
+    // that Reports_model::incomestatement()/customincomestatement() use
+    // (geopos_transactions, type=Income). "ext=0" marks customer-side entries
+    // (as opposed to ext=1 supplier-side entries used for Liabilities).
+    // Customer visibility mirrors Customers_model::_get_datatables_query()/get_datatables()
+    // exactly, so this section lists the same people as the /customers page:
+    // real customers only (users_groups.group_id = 2), seller-scoped by
+    // users.assigned_seller, staff-scoped by users.assigned.
+    $this->db->select("geopos_transactions.payerid as id,
+                       COALESCE(NULLIF(geopos_transactions.payer, ''), users.username, 'Unknown') as name,
+                       COALESCE(SUM(geopos_transactions.credit),0) as balance", false);
+    $this->db->from('geopos_transactions');
+    $this->db->join('users', 'users.id = geopos_transactions.payerid', 'inner');
+    $this->db->join('users_groups ug', 'ug.user_id = users.id', 'inner');
+    $this->db->where('ug.group_id', 2);
+    $this->db->where('geopos_transactions.type', 'Income');
+    $this->db->where('geopos_transactions.ext', 0);
+    if ($this->aauth->get_user()->loc) {
+        $this->db->where('geopos_transactions.loc', $this->aauth->get_user()->loc);
+    } elseif (!BDATA) {
+        $this->db->where('geopos_transactions.loc', 0);
+    }
+    if ($is_seller) {
+        // Scope by which customer the income belongs to, not by
+        // geopos_transactions.eid — eid just records whoever's session created
+        // the row and is not a reliable "owner" field.
+        $this->db->where('users.assigned_seller', $seller_id);
+    } elseif ($this->aauth->get_user()->id != 1) {
+        // Non-admin staff see only their own assigned customers (same as /customers)
+        $this->db->where('users.assigned', $this->aauth->get_user()->id);
+    }
+    $this->db->group_by('geopos_transactions.payerid');
     $data['customers'] = $this->db->get()->result_array();
 $this->db->reset_query();
     $this->load->view('fixed/header', $head);

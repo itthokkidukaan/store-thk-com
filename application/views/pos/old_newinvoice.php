@@ -771,61 +771,44 @@ $( document ).ready(function() {
     }
 	
 	$(document).ready(function () {
-   
-    function setAccountDropdown() {
+
+    // Pre-select a sensible default account, but only when nothing has been
+    // chosen yet -- never override an account the user has actually picked,
+    // and never disable the other options (they must stay pickable).
+    function setDefaultAccountIfEmpty() {
         var defaultAccount = "<?=$accnumber?>";
-        if (defaultAccount && $("#p_account option[value='" + defaultAccount + "']").length) {
+        if (!$("#p_account").val() && defaultAccount && $("#p_account option[value='" + defaultAccount + "']").length) {
             $("#p_account").val(defaultAccount);
-        } else {
-            $("#p_account").prop('selectedIndex', 0);
         }
-        $("#p_account option").not(':selected').attr('disabled', true); 
     }
 
-    
-    function enableAllAccounts() {
-		var myacc = '<?=$this->aauth->get_user()->id?>';
-		 $("#p_account").val("<?=$accnumber?>"); 
-		if(myacc != 1){
-			
-			
-	   $("#p_account option").not(':selected').attr('disabled', true); 
-			
-		}else{
-			$("#p_account option").attr('disabled', false); 
-			
-		}
-     
-	   
-    }
-
-  /*  
+  /*
     function calculateBalanceDue() {
-        var amount = parseFloat($("#p_amount").val()) || 0; 
-        var total =  parseFloat($("#invoiceyoghtml").val()) || 0; 
-        var balanceDue = Math.max(total - amount, 0); 
-        $("#balance1").val(balanceDue.toFixed(2)); 
+        var amount = parseFloat($("#p_amount").val()) || 0;
+        var total =  parseFloat($("#invoiceyoghtml").val()) || 0;
+        var balanceDue = Math.max(total - amount, 0);
+        $("#balance1").val(balanceDue.toFixed(2));
         return balanceDue;
     } */
 
-   
-    function checkBalanceDue() {
-        var paymentMethod = $("#p_method").val(); 
 
-        
-            if (paymentMethod === "Cash") {
-               
-                enableAllAccounts();
-            } else {
-               
-                setAccountDropdown();
-            }
-        
+    function checkBalanceDue() {
+        setDefaultAccountIfEmpty();
     }
 
-   
+
     $("#p_method").change(function () {
         checkBalanceDue();
+
+        var total = parseFloat($('#invoiceyoghtml').val()) || 0;
+        if ($(this).val() === "Due") {
+            // Nothing received yet on a due sale -- balance due is the full order total.
+            $("#p_amount").val('0.00');
+        } else if ($(this).val() !== "") {
+            // Any other payment method defaults to fully paid.
+            $("#p_amount").val(total.toFixed(2));
+        }
+        update_pay_pos();
     });
 
    

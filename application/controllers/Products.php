@@ -822,6 +822,7 @@ $today = date('Y-m-d');
 
 public function warehouseproduct_list()
 {
+    sync_online_order_stock_ledger();
     $catid = $this->input->get('id');
     $list = $this->products->get_datatables($catid, true);
     $data = array();

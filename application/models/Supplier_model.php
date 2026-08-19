@@ -37,14 +37,19 @@ class Supplier_model extends CI_Model
 
         $this->db->from($this->table);
         if ($this->aauth->get_user()->loc) {
+            $this->db->group_start();
             $this->db->where('loc', $this->aauth->get_user()->loc);
+            if (BDATA) {
+                $this->db->or_where('loc', 0);
+            }
+            $this->db->group_end();
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
         }
         if ($id != '') {
             $this->db->where('gid', $id);
         }
-        if (function_exists('is_seller_user') && is_seller_user()) {
+        if (function_exists('is_seller_user') && is_seller_user() && $this->db->field_exists('eid', 'geopos_supplier')) {
             $seller_id = (int)$this->session->userdata('user_id');
             $this->db->where('eid', $seller_id);
         }
@@ -85,24 +90,13 @@ class Supplier_model extends CI_Model
         $this->_get_datatables_query($id);
         if ($this->input->post('length') != -1)
             $this->db->limit($this->input->post('length'), $this->input->post('start'));
-        if ($this->aauth->get_user()->loc) {
-            $this->db->where('loc', $this->aauth->get_user()->loc);
-        }
         $query = $this->db->get();
         return $query->result();
     }
 
     function count_filtered($id = '')
     {
-        $this->_get_datatables_query();
-        if ($this->aauth->get_user()->loc) {
-            $this->db->where('loc', $this->aauth->get_user()->loc);
-        } elseif (!BDATA) {
-            $this->db->where('loc', 0);
-        }
-        if ($id != '') {
-            $this->db->where('gid', $id);
-        }
+        $this->_get_datatables_query($id);
         $query = $this->db->get();
 
         return $query->num_rows($id = '');
@@ -110,16 +104,25 @@ class Supplier_model extends CI_Model
 
     public function count_all($id = '')
     {
-        $this->_get_datatables_query();
+        $this->db->from($this->table);
         if ($this->aauth->get_user()->loc) {
+            $this->db->group_start();
             $this->db->where('loc', $this->aauth->get_user()->loc);
+            if (BDATA) {
+                $this->db->or_where('loc', 0);
+            }
+            $this->db->group_end();
         } elseif (!BDATA) {
             $this->db->where('loc', 0);
         }
-        $query = $this->db->get();
         if ($id != '') {
             $this->db->where('gid', $id);
         }
+        if (function_exists('is_seller_user') && is_seller_user() && $this->db->field_exists('eid', 'geopos_supplier')) {
+            $seller_id = (int)$this->session->userdata('user_id');
+            $this->db->where('eid', $seller_id);
+        }
+        $query = $this->db->get();
         return $query->num_rows($id = '');
     }
 
@@ -165,16 +168,16 @@ class Supplier_model extends CI_Model
             'taxid' => $taxid
         );
 
-        if ($this->aauth->get_user()->loc) {
-            $data['loc'] = $this->aauth->get_user()->loc;
+        $data['loc'] = (int)$this->aauth->get_user()->loc;
+        if ($this->db->field_exists('eid', 'geopos_supplier')) {
+            $data['eid'] = (int)$this->aauth->get_user()->id;
         }
-        $data['eid'] = (int)$this->aauth->get_user()->id;
 
 
         if ($this->db->insert('geopos_supplier', $data)) {
             $cid = $this->db->insert_id();
             echo json_encode(array('status' => 'Success', 'message' =>
-                $this->lang->line('UPDATED') . ' <a href="' . base_url('supplier/view?id=' . $cid) . '" class="btn btn-info btn-sm"><span class="icon-eye"></span> ' . $this->lang->line('View') . '</a>', 'cid' => $cid));
+                $this->lang->line('ADDED') . ' <a href="' . base_url('supplier/view?id=' . $cid) . '" class="btn btn-info btn-sm"><span class="icon-eye"></span> ' . $this->lang->line('View') . '</a>', 'cid' => $cid));
         } else {
             echo json_encode(array('status' => 'Error', 'message' =>
                 $this->lang->line('ERROR')));

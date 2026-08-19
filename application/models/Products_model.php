@@ -688,9 +688,15 @@ FROM products $whr");
             $this->db->join('geopos_warehouse', 'geopos_warehouse.id = products.warehouse');
             $this->db->where('geopos_warehouse.loc', 0);
         }
+        if (is_seller_user()) {
+            $this->db->where('products.seller_id', (int)$this->session->userdata('user_id'));
+        }
         if ($term) {
+            $term = $this->db->escape_like_str($term);
+            $this->db->group_start();
             $this->db->where("products.name LIKE '%$term%'");
             $this->db->or_where("products.article LIKE '$term%'");
+            $this->db->group_end();
         }
         $query = $this->db->get();
 		

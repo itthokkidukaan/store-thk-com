@@ -89,6 +89,8 @@ function add_to_cart(e, triggerEl) {
     var variant_values = selectedOption.dataset.variant_values || '';
     var special_price = selectedOption.dataset.special_price || 0;
     var price = selectedOption.dataset.price || display_price;
+    var base_price = parseFloat(selectedOption.dataset.base_price || display_price);
+    var tax_amount = parseFloat(selectedOption.dataset.tax_amount || 0);
     var title = $.trim($(shopItem).find('.shop-item-title').text());
     var image = $(shopItem).find('.item-image').attr('src') || '';
 
@@ -117,6 +119,8 @@ function add_to_cart(e, triggerEl) {
             variant_values: variant_values,
             special_price: special_price,
             price: price,
+            base_price: base_price,
+            tax_amount: tax_amount,
             display_price: display_price,
             title: title,
             image: image,
@@ -145,7 +149,12 @@ function display_cart() {
                         <p class="cart-item-title ">${item.title}</p>
                     </div>
                     <div class="col">
-                        <span class="cart-price">Rs. ${ parseFloat(item.display_price).toLocaleString()}</span>
+                        <div style="display:flex;flex-direction:column;line-height:1.3;">
+                            <span class="cart-price">Rs. ${ parseFloat(item.display_price).toLocaleString()}</span>
+                            <!-- Special price / tax breakdown disabled per request -- uncomment to re-enable
+                            <small class="text-muted">Special Rs. ${ parseFloat(item.base_price || item.display_price).toLocaleString() } + Tax Rs. ${ parseFloat(item.tax_amount || 0).toLocaleString() }</small>
+                            -->
+                        </div>
                     </div>
                     <div class="col">
                     <div class="input-group-prepend">
@@ -248,11 +257,19 @@ function display_products(products) {
         var imageUrl = product['image_md'] || product['image'] || '';
         var selectedIndex = 0;
         var variantsHtml = '';
+        var initialBreakdown = '';
         for (var j = 0; j < variants.length; j++) {
             var variant_values = (variants[j]['variant_values']) ? variants[j]['variant_values'] + ' - ' : "";
             var variant_price = variants[j]['special_price'] > 0 ? variants[j]['special_price'] : variants[j]['price'];
             var isSelected = (j === selectedIndex) ? "selected" : "";
-            variantsHtml += '<option ' + isSelected + ' data-sku="' + (variants[j]['sku'] || '') + '" data-variant_values="' + (variants[j]['variant_values'] || '') + '" data-stock="' + variants[j]['stock'] + '" data-sellerid="' + product['seller_id'] + '" data-price="' + variants[j]['price'] + '" data-special_price="' + variants[j]['special_price'] + '" data-variant_id="' + variants[j]['id'] + '" value="' + variant_price + '" class="shop-item-price">' + variant_values + currency + " " + parseFloat(variant_price).toLocaleString() + '</option>';
+            var base_price = parseFloat(variants[j]['base_price'] || variant_price);
+            var tax_amount = parseFloat(variants[j]['tax_amount'] || 0);
+            var priceLabel = currency + " " + parseFloat(variant_price).toLocaleString();
+            var breakdownLabel = 'Special ' + currency + base_price.toLocaleString() + ' + Tax ' + currency + tax_amount.toLocaleString();
+            if (j === selectedIndex) {
+                initialBreakdown = breakdownLabel;
+            }
+            variantsHtml += '<option ' + isSelected + ' data-sku="' + (variants[j]['sku'] || '') + '" data-variant_values="' + (variants[j]['variant_values'] || '') + '" data-stock="' + variants[j]['stock'] + '" data-sellerid="' + product['seller_id'] + '" data-price="' + variants[j]['price'] + '" data-special_price="' + variants[j]['special_price'] + '" data-base_price="' + base_price + '" data-tax_amount="' + tax_amount + '" data-variant_id="' + variants[j]['id'] + '" value="' + variant_price + '" class="shop-item-price">' + variant_values + priceLabel + '</option>';
         }
 
         if (!variantsHtml) {
@@ -273,6 +290,9 @@ function display_products(products) {
                     <select class="form-control product-variants variant_value">
                         ${variantsHtml}
                     </select>
+                    <!-- Special price / tax breakdown disabled per request -- uncomment to re-enable
+                    <small class="text-muted variant-price-breakdown d-block mb-1">${initialBreakdown}</small>
+                    -->
                     <div class="shop-item-details justify-content-center">
                         <button class="btn btn-sm btn-info shop-item-button" type="button" ${variants.length ? '' : 'disabled'}>Add To Cart</button>
                     </div>
@@ -283,7 +303,7 @@ function display_products(products) {
 }
 
 $(document).ready(function () {
-    render_products_empty_state('Select a category, then choose a product to show it here');
+    get_products('', $('#limit').val() || 15, 0);
     $(".pagination-container").empty();
 });
 
@@ -299,6 +319,19 @@ function update_product_search_state() {
 $(document).on("click", ".shop-item-button", function (e) {
     add_to_cart(e, this);
 });
+
+// Special price / tax breakdown disabled per request -- uncomment to re-enable
+// $(document).on("change", ".product-variants.variant_value", function () {
+//     var selectedOption = this.options[this.selectedIndex];
+//     var breakdownEl = $(this).closest('.shop-item').find('.variant-price-breakdown');
+//     if (!selectedOption || !breakdownEl.length) {
+//         return;
+//     }
+//     var currency = $('#cart-total-price').attr('data-currency') || '';
+//     var base_price = parseFloat(selectedOption.dataset.base_price || 0);
+//     var tax_amount = parseFloat(selectedOption.dataset.tax_amount || 0);
+//     breakdownEl.text('Special ' + currency + base_price.toLocaleString() + ' + Tax ' + currency + tax_amount.toLocaleString());
+// });
 
 $("#search_products").select2({
     ajax: {
@@ -343,14 +376,13 @@ $('#product_categories').on("change", function () {
     var category_id = $('#product_categories').val();
     $('#current_page').val("0");
     if (!syncing_category_from_product) {
-        $("#search_products").val(null).trigger('change');
+        // clear the search box's own UI only -- the actual product fetch below
+        // already covers both the "category picked" and "category cleared" cases.
+        $("#search_products").val(null).trigger('change.select2');
     }
     syncing_category_from_product = false;
     update_product_search_state();
-    if (!category_id) {
-        render_products_empty_state('Select a category, then choose a product to show it here');
-        $(".pagination-container").empty();
-    }
+    get_products(category_id, $('#limit').val() || 15, 0);
 });
 
 $(document).ready(function () {

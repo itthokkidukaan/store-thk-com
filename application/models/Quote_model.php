@@ -32,16 +32,16 @@ class Quote_model extends CI_Model
     {
         $is_seller = function_exists('is_seller_user') && is_seller_user();
 
+        $this->db->select('*');
+        $this->db->from('geopos_warehouse');
         if ($is_seller) {
             $seller_id = (int)$this->session->userdata('user_id');
-            $this->db->distinct();
-            $this->db->select('geopos_warehouse.*');
-            $this->db->from('geopos_warehouse');
-            $this->db->join('products', 'products.warehouse = geopos_warehouse.id', 'inner');
-            $this->db->where('products.seller_id', $seller_id);
-        } else {
-            $this->db->select('*');
-            $this->db->from('geopos_warehouse');
+            $this->db->group_start();
+            $this->db->where('geopos_warehouse.id', 1);
+            if ($this->db->field_exists('created_by', 'geopos_warehouse')) {
+                $this->db->or_where('geopos_warehouse.created_by', $seller_id);
+            }
+            $this->db->group_end();
         }
         if ($this->aauth->get_user()->loc) {
             $this->db->group_start();
@@ -79,7 +79,7 @@ class Quote_model extends CI_Model
 
     }
 
-    public function quote_products($id)
+    public function quote_products($id, $seller_id = 0)
     {
 
         $this->db->select('geopos_quotes_items.*, products.product_price as sellprice, products.article, products.seller_id, sd.store_name as seller_name, pv.sku AS variant_sku, pv.price AS variant_price');
@@ -89,10 +89,13 @@ class Quote_model extends CI_Model
         $this->db->join('attribute_values av', 'av.value = geopos_quotes_items.unit', 'left');
         $this->db->join('product_variants pv', 'pv.product_id = geopos_quotes_items.pid AND FIND_IN_SET(av.id, pv.attribute_value_ids) > 0', 'left');
         $this->db->where('tid', $id);
+        if ($seller_id) {
+            $this->db->where('products.seller_id', $seller_id);
+        }
         $query = $this->db->get();
         return $query->result_array();
 
-    } 
+    }
 	
 	public function report_products($ids = [])
 {
@@ -347,9 +350,9 @@ class Quote_model extends CI_Model
                     'product_name' => $row['product'],
                     'code' => $row['code'],
                     'quantity' => $amt,
-                    'price' => $row['sellprice'],
-                    'tax_amount' => $row['tax'],
-                    'discount' => $row['discount'],
+                    'price' => $row['price'],
+                    'tax_amount' => $row['totaltax'],
+                    'discount' => $row['totaldiscount'],
                     'sub_total' => $row['subtotal'],
                     'status' =>json_encode(array(array($status, date("d-m-Y h:i:sa")))),
                     'variant_name' => $row['unit'],
@@ -663,14 +666,17 @@ GROUP BY qi.product, qi.unit, qi.product_article, qi.pid, p.purchase_price;
     }  */
 	
 	
-	public function get_quote_items_by_date($date) {
+	public function get_quote_items_by_date($date, $seller_id = 0) {
     $this->load->helper('string');
-    $this->db->select('qi.pid, qi.unit, qi.product, qi.code, u.id as store_id, qi.qty, p.name as productname,p.article');
+    $this->db->select('qi.pid, qi.unit, qi.product, qi.code, u.id as store_id, qi.qty, p.name as productname,p.article,p.seller_id');
     $this->db->from('geopos_quotes q');
     $this->db->join('geopos_quotes_items qi', 'q.id = qi.tid');
     $this->db->join('users u', 'q.csd = u.id');
     $this->db->join('products p', 'qi.pid = p.id');
     $this->db->where('q.invoicedate', $date);
+    if ($seller_id) {
+        $this->db->where('p.seller_id', $seller_id);
+    }
     $this->db->order_by('qi.product', 'asc');
     $results = $this->db->get()->result_array();
 
@@ -691,6 +697,7 @@ GROUP BY qi.product, qi.unit, qi.product_article, qi.pid, p.purchase_price;
                 'product' => $row['product'],
                 'productname' => $row['productname'],
                 'article' => $row['article'],
+                'seller_id' => $row['seller_id'],
                 'unit' => $base_unit,
                 'original_unit' => $base_unit,
                 'total_qty' => 0
@@ -726,6 +733,7 @@ GROUP BY qi.product, qi.unit, qi.product_article, qi.pid, p.purchase_price;
         'pid' => $product['pid'],
         'product' => $product['product'],
         'article' => $product['article'],
+        'seller_id' => $product['seller_id'],
         'productname' => $product['productname'],
         'unit' => $product['unit'],
         'original_unit' => $product['original_unit'],

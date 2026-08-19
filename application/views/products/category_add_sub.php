@@ -43,7 +43,7 @@
                             <?php
                             foreach ($cat as $row) {
                                 $cid = $row['id'];
-                                $title = $row['title'];
+                                $title = $row['name'];
                                 echo "<option value='$cid'>$title</option>";
                             }
                             ?>
