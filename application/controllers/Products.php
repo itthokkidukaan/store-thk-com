@@ -869,18 +869,34 @@ $end_date   = $this->input->post('end_date');
 
         $row[] = $prd->sku;
         $row[] = $prd->c_title;
-        // Fetch special price from the first variant of the product
-        $sp_query = $this->db->select('special_price')->from('product_variants')->where('product_id', $prd->id)->limit(1)->get()->row_array();
-        $special_price = isset($sp_query['special_price']) ? (float)$sp_query['special_price'] : 0;
+
+        // Compute special price the same way the DB (recalculate_variant_prices_on_update trigger)
+        // does, since that's what the product edit page's Special Price box shows on load
+        // (it renders the stored product_variants.special_price, not a live JS recalculation):
+        // purchase_price -> + margin -> - discount% -> + packing_price (packing added last).
+        $variant_row = $this->db->select('purchase_price, packing_price, margin_type, margin_percent, disc_percent')
+            ->from('product_variants')
+            ->where('product_id', $prd->id)
+            ->limit(1)
+            ->get()->row_array();
+
+        $variant_purchase_price = !empty($variant_row['purchase_price']) ? (float)$variant_row['purchase_price'] : (float)$prd->purchase_price;
+        $packing_price = isset($variant_row['packing_price']) ? (float)$variant_row['packing_price'] : 0;
+        $margin_type = !empty($variant_row['margin_type']) ? $variant_row['margin_type'] : 'Fixed';
+        $margin_percent = isset($variant_row['margin_percent']) ? (float)$variant_row['margin_percent'] : 0;
+        $disc_percent = isset($variant_row['disc_percent']) ? (float)$variant_row['disc_percent'] : 0;
+
+        if ($margin_type === 'Percentage') {
+            $marked_up_price = $variant_purchase_price + ($variant_purchase_price * $margin_percent / 100);
+        } else {
+            $marked_up_price = $variant_purchase_price + $margin_percent;
+        }
+        $special_price = ($marked_up_price - ($marked_up_price * $disc_percent / 100)) + $packing_price;
 
         $row[] = number_format($special_price, 2);
 
         // Popup Sell Price = margin/discount/packaging-based special price; fall back to product_price if not set
         $popup_sell_price = ($special_price > 0) ? $special_price : (float)$prd->product_price;
-
-        // Fetch discount percent from the first variant of the product
-        $disc_query = $this->db->select('disc_percent')->from('product_variants')->where('product_id', $prd->id)->limit(1)->get()->row_array();
-        $disc_percent = isset($disc_query['disc_percent']) ? (float)$disc_query['disc_percent'] : 0;
 
         $last_bill_price = (float)$this->getlastbillprice($prd->id);
         if ($disc_percent > 0) {
@@ -1945,11 +1961,17 @@ public function filter_over() {
     $sell_rate = $sell_price;
 
     if ($product['product_price'] == $sell_price && $variant['purchase_price'] != $purchase_price) {
-        if ($variant['margin_type'] === 'Fixed') {
-            $calculated_price = $purchase_price + $variant['margin_percent'];
-        } elseif ($variant['margin_type'] === 'Percentage') {
-            $calculated_price = $purchase_price + ($purchase_price * $variant['margin_percent'] / 100);
+        // Same order the DB trigger uses: purchase -> margin -> discount -> + packing (packing added last)
+        $variant_packing_price = isset($variant['packing_price']) ? (float)$variant['packing_price'] : 0;
+        $variant_disc_percent = isset($variant['disc_percent']) ? (float)$variant['disc_percent'] : 0;
+
+        if ($variant['margin_type'] === 'Percentage') {
+            $marked_up_price = $purchase_price + ($purchase_price * $variant['margin_percent'] / 100);
+        } else {
+            $marked_up_price = $purchase_price + $variant['margin_percent'];
         }
+
+        $calculated_price = ($marked_up_price - ($marked_up_price * $variant_disc_percent / 100)) + $variant_packing_price;
         $sell_rate = $calculated_price;
     }
 

@@ -46,7 +46,7 @@
         "2506"
     ],
     "purchase_price": [
-        "100.00",
+        "200",
         "200.00"
     ],
     "packing_price": [
@@ -66,12 +66,12 @@
         "0"
     ],
     "variant_price": [
-        "120",
-        "210"
+        "220",
+        "200"
     ],
     "variant_special_price": [
-        "109",
-        "210"
+        "199",
+        "200"
     ],
     "variant_sku": [
         "apple-1Kg-0B7AP4",

@@ -2162,7 +2162,7 @@ var edit_product_id = $('input[name=edit_product_id]').val();
 
 if (edit_product_id) {
 
-    create_fetched_attributes_html('seller').done(function () {
+    create_fetched_attributes_html(from).done(function () {
         $('.no-attributes-added').hide();
         $('#save_attributes').removeClass('d-none');
         $('.no-variants-added').hide();
