@@ -366,6 +366,23 @@ return $result; // Res
 
     public function edit($id, $name, $company, $phone, $email, $address, $city, $region, $country, $postbox, $customergroup, $taxid, $name_s, $phone_s, $email_s, $address_s, $city_s, $region_s, $country_s, $postbox_s, $docid = '', $custom = '', $whatsappmobile= '', $discount = 0 , $managermobile= '', $paymentterm= '', $repeatorder= '', $document_file= '')
     {
+        if (empty(trim($phone))) {
+            echo json_encode(array('status' => 'Error', 'message' => 'Phone number is required.'));
+            return;
+        }
+
+        // A phone number already used by a different customer will otherwise fail
+        // the update silently (or with a bare DB error), so check for it up front.
+        $this->db->select('id');
+        $this->db->from('users');
+        $this->db->where('mobile', $phone);
+        $this->db->where('id !=', $id);
+        $duplicate = $this->db->get()->row_array();
+        if (!empty($duplicate)) {
+            echo json_encode(array('status' => 'Error', 'message' => 'This phone number is already used by another customer.'));
+            return;
+        }
+
 		$language = '';
         $data = array(
             'username' => $name,
@@ -417,8 +434,10 @@ return $result; // Res
 
             $this->custom->edit_save_fields_data($id, 1);
         } else {
-            echo json_encode(array('status' => 'Error', 'message' =>
-                $this->lang->line('ERROR')));
+            $dbError = $this->db->error();
+            $message = !empty($dbError['message']) ? $dbError['message'] : $this->lang->line('ERROR');
+            log_message('error', "Customers_model::edit - update failed for id {$id}: " . $message);
+            echo json_encode(array('status' => 'Error', 'message' => $message));
         }
 
     }

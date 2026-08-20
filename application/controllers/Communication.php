@@ -170,17 +170,24 @@ $phone =  $this->input->post('selectedClients');
     $this->pricelist_attach($this->input->post('catid'));
 
     // 2) Prepare values from POST or defaults
-    // Destination phone number (string). Using 'selectedClients' as before; you can send a single number like "918920104070"
-    $destination = $this->input->post('selectedClients');
-    if (empty($destination)) {
+    // 'selectedClients' can hold one or more comma-separated numbers (one per checked customer)
+    $destinationRaw = $this->input->post('selectedClients');
+    if (empty($destinationRaw)) {
         // fallback - you can change this default or remove it
-        $destination = $this->input->post('destination'); // try alternate field if present
+        $destinationRaw = $this->input->post('destination'); // try alternate field if present
     }
-    
+
     // Validate destination is not empty
-    if (empty($destination)) {
+    if (empty($destinationRaw)) {
         log_message('error', "whatsapp_pricelist - No destination phone number provided");
-        echo json_encode(['status' => 'error', 'message' => 'Destination phone number is required']);
+        echo json_encode(['status' => 'error', 'message' => 'Please select at least one customer with a valid phone number.']);
+        return false;
+    }
+
+    $destinations = array_filter(array_map('trim', explode(',', $destinationRaw)));
+    if (empty($destinations)) {
+        log_message('error', "whatsapp_pricelist - No destination phone number provided");
+        echo json_encode(['status' => 'error', 'message' => 'Please select at least one customer with a valid phone number.']);
         return false;
     }
 
@@ -200,70 +207,81 @@ $phone =  $this->input->post('selectedClients');
     // PDF URL (where your generated pdf is accessible publicly)
     $pdfUrl = base_url("userfiles/temp/todaypricelist.pdf");
 
-    // 3) Build payload exactly like your curl body
-    $payload = array(
-        "apiKey" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4YTNmNTg0YmU3MWMxMGMzM2FiODlmOCIsIm5hbWUiOiJUaG9rIGtpIGR1a2FhbiIsImFwcE5hbWUiOiJBaVNlbnN5IiwiY2xpZW50SWQiOiI2OGEzZjU4NGJlNzFjMTBjMzNhYjg5ZjMiLCJhY3RpdmVQbGFuIjoiRlJFRV9GT1JFVkVSIiwiaWF0IjoxNzU1NTc1Njg0fQ.aCATrXPQFmv1B0QP433i_MHHhPlC1pT0doRhSzHvVSY",
-        "campaignName" => "daily share product price",
-        "destination" => $destination,
-        "userName" => $userName,
-        "templateParams" => $templateParams,
-        "source" => "new-landing-page form",
-        "media" => array(
-            "url" => $pdfUrl,
-            "filename" => "todaypricelist_" . date('Ymd')
-        ),
-        "buttons" => array(),
-        "carouselCards" => array(),
-        "location" => new stdClass(),   // empty object as in your curl
-        "attributes" => new stdClass(), // empty object as in your curl
-        "paramsFallbackValue" => array(
-            "FirstName" => "Customer"
-        )
-    );
-
-    // 4) Send request to AiSensy API
     $apiUrl = "https://backend.aisensy.com/campaign/t1/api/v2";
-    $ch = curl_init($apiUrl);
+    $apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4YTNmNTg0YmU3MWMxMGMzM2FiODlmOCIsIm5hbWUiOiJUaG9rIGtpIGR1a2FhbiIsImFwcE5hbWUiOiJBaVNlbnN5IiwiY2xpZW50SWQiOiI2OGEzZjU4NGJlNzFjMTBjMzNhYjg5ZjMiLCJhY3RpdmVQbGFuIjoiRlJFRV9GT1JFVkVSIiwiaWF0IjoxNzU1NTc1Njg0fQ.aCATrXPQFmv1B0QP433i_MHHhPlC1pT0doRhSzHvVSY";
 
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-    // ensure slashes not escaped (optional)
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload, JSON_UNESCAPED_SLASHES));
-    // optional timeouts
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    // 3) The AiSensy campaign API only accepts a single "destination" per call,
+    // so a customer must be sent its own request rather than a comma-joined list.
+    $results = array();
+    $anySuccess = false;
 
-    $response = curl_exec($ch);
-    
-    // Get curl error info
-    $curlErrNo = curl_errno($ch);
-    $curlError = curl_error($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    foreach ($destinations as $destination) {
+        $payload = array(
+            "apiKey" => $apiKey,
+            "campaignName" => "daily share product price",
+            "destination" => $destination,
+            "userName" => $userName,
+            "templateParams" => $templateParams,
+            "source" => "new-landing-page form",
+            "media" => array(
+                "url" => $pdfUrl,
+                "filename" => "todaypricelist_" . date('Ymd')
+            ),
+            "buttons" => array(),
+            "carouselCards" => array(),
+            "location" => new stdClass(),   // empty object as in your curl
+            "attributes" => new stdClass(), // empty object as in your curl
+            "paramsFallbackValue" => array(
+                "FirstName" => "Customer"
+            )
+        );
 
-    // error handling & debug logging
-    if ($curlErrNo) {
-        $errMsg = "cURL error ({$curlErrNo}): {$curlError}";
-        log_message('error', "whatsapp_pricelist - curl error: {$errMsg} | payload: " . print_r($payload, true));
+        $ch = curl_init($apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload, JSON_UNESCAPED_SLASHES));
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+        $response = curl_exec($ch);
+        $curlErrNo = curl_errno($ch);
+        $curlError = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        echo json_encode(['status' => 'error', 'message' => $errMsg]);
-        return false;
+
+        if ($curlErrNo) {
+            $errMsg = "cURL error ({$curlErrNo}): {$curlError}";
+            log_message('error', "whatsapp_pricelist - curl error for {$destination}: {$errMsg}");
+            $results[] = array(
+                'destination' => $destination,
+                'status' => 'error',
+                'message' => $errMsg
+            );
+            continue;
+        }
+
+        log_message('info', "whatsapp_pricelist - destination: {$destination} | http_code: {$httpCode} | response: {$response}");
+
+        $ok = ($httpCode >= 200 && $httpCode < 300);
+        if ($ok) {
+            $anySuccess = true;
+        }
+        $results[] = array(
+            'destination' => $destination,
+            'status' => $ok ? 'success' : 'api_error',
+            'http_code' => $httpCode,
+            'response' => $response
+        );
     }
 
-    // Log response + HTTP code
-    log_message('info', "whatsapp_pricelist - http_code: {$httpCode} | response: {$response}");
-
-    // Helpful debug output for you
-    echo json_encode([
-        'status' => ($httpCode >= 200 && $httpCode < 300) ? 'success' : 'api_error',
-        'http_code' => $httpCode,
-        'response' => $response
-    ]);
-
-    curl_close($ch);
-
-    // 5) Cleanup temporary PDF file (suppress errors if any)
+    // 4) Cleanup temporary PDF file (suppress errors if any)
    // @unlink(FCPATH . 'userfiles' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . 'todaypricelist.pdf');
+
+    echo json_encode([
+        'status' => $anySuccess ? 'success' : 'error',
+        'results' => $results
+    ]);
 
     return true;
 }

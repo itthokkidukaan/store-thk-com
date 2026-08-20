@@ -394,6 +394,8 @@ echo $output;
         $document_file = $this->input->post('document_file', true);
         if ($id) {
             $this->customers->edit($id, $name, $company, $phone, $email, $address, $city, $region, $country, $postbox, $customergroup, $taxid, $name_s, $phone_s, $email_s, $address_s, $city_s, $region_s, $country_s, $postbox_s, $docid, $custom, $whatsappmobile, $discount, $managermobile, $paymentterm, $repeatorder, $document_file);
+        } else {
+            echo json_encode(array('status' => 'Error', 'message' => 'Missing customer id.'));
         }
     }
 

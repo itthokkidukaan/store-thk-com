@@ -686,12 +686,17 @@ $('#sendSmsS').on('click', '#sendSmsSelected', function (e) {
 	
 	$(document).ready(function () {
     $('#sendpricelist').on('click', function () {
-      
+
+        if (!$('#selectedClients').val()) {
+            showResponseMessage('error', 'Please select at least one customer with a valid phone number.');
+            return;
+        }
+
         let $button = $(this);
         $button.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Sending...');
 
-       
-        let formData = $('#sendprice_form').serialize(); 
+
+        let formData = $('#sendprice_form').serialize();
    $.ajax({
     url: '<?= base_url("communication/whatsapp_pricelist") ?>',
     type: 'POST',
@@ -699,17 +704,16 @@ $('#sendSmsS').on('click', '#sendSmsSelected', function (e) {
     dataType: 'json',   // ⭐ IMPORTANT
     success: function (response) {
 
-        // Agar response.response string hai to parse
-        let apiResponse = response.response;
+        let results = response.results || [];
+        let successCount = results.filter(function (r) { return r.status === 'success'; }).length;
+        let failCount = results.length - successCount;
 
-        if (typeof apiResponse === 'string') {
-            apiResponse = JSON.parse(apiResponse);
-        }
-
-        if (apiResponse.success === "true" || apiResponse.success === true) {
-            alert( 'Message sent successfully!');
+        if (response.status === 'success' && failCount === 0) {
+            alert('Message sent successfully to ' + successCount + ' customer(s)!');
+        } else if (successCount > 0) {
+            showResponseMessage('error', 'Sent to ' + successCount + ' customer(s), failed for ' + failCount + '. Check the number(s) and try again.');
         } else {
-            showResponseMessage('error', 'Message sending failed!');
+            showResponseMessage('error', response.message || 'Message sending failed! Please check the selected customer(s) phone number.');
         }
     },
     error: function () {
@@ -856,25 +860,35 @@ $(document).ready(function () {
 
     function updateHiddenInput() {
         let selectedValues = [];
-        
-       
-        $('.clientcheck:checked').each(function () {
+
+        // Only real customer rows carry name="cust[]"; the header "select all"
+        // checkbox shares the .clientcheck class but has no phone number.
+        $('.clientcheck[name="cust[]"]:checked').each(function () {
             selectedValues.push($(this).val());
         });
 
-    
         let uniqueValues = [...new Set(selectedValues)].filter(value => value.trim() !== '');
 
-     
-        let formattedValues = uniqueValues.map(value => {
-         
-            if (value.startsWith('0')) {
-                value = value.substring(1); 
+        let formattedValues = uniqueValues.map(function (value) {
+            // Strip everything except digits so spaces/dashes/+ don't break formatting
+            let digits = value.replace(/\D/g, '');
+
+            // Already has the 91 country code (12 digits starting with 91) - keep as is
+            if (digits.length === 12 && digits.startsWith('91')) {
+                return digits;
             }
-            return '91' + value; 
+
+            // Strip a single leading 0 (local dialing prefix) before adding the country code
+            if (digits.length === 11 && digits.startsWith('0')) {
+                digits = digits.substring(1);
+            }
+
+            return '91' + digits;
+        }).filter(function (value) {
+            // A valid Indian mobile number formatted with country code is 12 digits (91 + 10)
+            return value.length === 12;
         });
 
-       
         $('#selectedClients').val(formattedValues.join(','));
     }
 });

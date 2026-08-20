@@ -796,14 +796,14 @@ $today = date('Y-m-d');
             if ($this->aauth->get_user()->roleid == 1) {
                 $upbutton = '<a href="' . base_url() . 'products/edit/' . $pid . '" class="btn btn-primary btn-sm"><span class="fa fa-pencil"></span> ' . $this->lang->line('Edit') . '</a>  
                   <a href="#" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  delete-object"><span class="fa fa-trash"></span> ' . $this->lang->line('Delete') . '</a>   
-                  <a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-success btn-sm  update-object">Updated</a>  <a href="#" onclick="sellreportspopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-primary btn-sm  update-object">Sell Reports</a>';
+                  <a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $popup_sell_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-success btn-sm  update-object">Updated</a>  <a href="#" onclick="sellreportspopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-primary btn-sm  update-object">Sell Reports</a>';
             }
             $row[] = '<a href="#" data-object-id="' . $pid . '" class="btn btn-success btn-sm  view-object"><span class="fa fa-eye"></span> ' . $this->lang->line('View') . ' </a> ' . $upbutton;
         } else {
             if ($this->aauth->get_user()->roleid == 1) {
                 $upbutton = '<a href="' . base_url() . 'products/edit/' . $pid . '" class="btn btn-primary btn-sm"><span class="fa fa-pencil"></span> ' . $this->lang->line('Edit') . '</a>   
                   <a href="#" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  delete-object"><span class="fa fa-trash"></span> ' . $this->lang->line('Delete') . '</a>  
-                  <a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  update-object">Unupdated</a>  <a href="#" onclick="sellreportspopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-primary btn-sm  update-object">Sell Reports</a>';
+                  <a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $popup_sell_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  update-object">Unupdated</a>  <a href="#" onclick="sellreportspopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-primary btn-sm  update-object">Sell Reports</a>';
             }
             $row[] = '<a href="#" data-object-id="' . $pid . '" class="btn btn-success btn-sm  view-object"><span class="fa fa-eye"></span> ' . $this->lang->line('View') . ' </a> ' . $upbutton;
         }
@@ -873,7 +873,10 @@ $end_date   = $this->input->post('end_date');
         $sp_query = $this->db->select('special_price')->from('product_variants')->where('product_id', $prd->id)->limit(1)->get()->row_array();
         $special_price = isset($sp_query['special_price']) ? (float)$sp_query['special_price'] : 0;
 
-        $row[] = number_format($special_price, 2); 
+        $row[] = number_format($special_price, 2);
+
+        // Popup Sell Price = margin/discount/packaging-based special price; fall back to product_price if not set
+        $popup_sell_price = ($special_price > 0) ? $special_price : (float)$prd->product_price;
 
         // Fetch discount percent from the first variant of the product
         $disc_query = $this->db->select('disc_percent')->from('product_variants')->where('product_id', $prd->id)->limit(1)->get()->row_array();
@@ -887,17 +890,23 @@ $end_date   = $this->input->post('end_date');
         $row[] = number_format($display_purchase_price, 2);
         $row[] = ($display_updated_price > 0) ? number_format($display_updated_price, 2) : '-';
         if (!empty($prd->updated_date) && date('Y-m-d', strtotime($prd->updated_date)) === $today) {
+            $upbutton = '';
             if ($this->aauth->get_user()->roleid == 1) {
-                $upbutton = '<a href="' . base_url() . 'products/edit/' . $pid . '" class="btn btn-primary btn-sm"><span class="fa fa-pencil"></span> ' . $this->lang->line('Edit') . '</a>  
-                  <a href="#" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  delete-object"><span class="fa fa-trash"></span> ' . $this->lang->line('Delete') . '</a>   
-                  <a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-success btn-sm  update-object">Updated</a>  <a href="#" onclick="sellreportspopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-primary btn-sm  update-object">Sell Reports</a>';
+                $upbutton = '<a href="' . base_url() . 'products/edit/' . $pid . '" class="btn btn-primary btn-sm"><span class="fa fa-pencil"></span> ' . $this->lang->line('Edit') . '</a>
+                  <a href="#" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  delete-object"><span class="fa fa-trash"></span> ' . $this->lang->line('Delete') . '</a>
+                  <a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $popup_sell_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-success btn-sm  update-object">Updated</a>  <a href="#" onclick="sellreportspopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-primary btn-sm  update-object">Sell Reports</a>';
+            } elseif (is_seller_user()) {
+                $upbutton = '<a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $popup_sell_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-success btn-sm  update-object">Updated</a>';
             }
             $row[] = '<a href="#" data-object-id="' . $pid . '" class="btn btn-success btn-sm  view-object"><span class="fa fa-eye"></span> ' . $this->lang->line('View') . ' </a> ' . $upbutton;
         } else {
+            $upbutton = '';
             if ($this->aauth->get_user()->roleid == 1) {
-                $upbutton = '<a href="' . base_url() . 'products/edit/' . $pid . '" class="btn btn-primary btn-sm"><span class="fa fa-pencil"></span> ' . $this->lang->line('Edit') . '</a>   
-                  <a href="#" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  delete-object"><span class="fa fa-trash"></span> ' . $this->lang->line('Delete') . '</a>  
-                  <a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  update-object">Unupdated</a>  <a href="#" onclick="sellreportspopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-primary btn-sm  update-object">Sell Reports</a>';
+                $upbutton = '<a href="' . base_url() . 'products/edit/' . $pid . '" class="btn btn-primary btn-sm"><span class="fa fa-pencil"></span> ' . $this->lang->line('Edit') . '</a>
+                  <a href="#" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  delete-object"><span class="fa fa-trash"></span> ' . $this->lang->line('Delete') . '</a>
+                  <a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $popup_sell_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  update-object">Unupdated</a>  <a href="#" onclick="sellreportspopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $prd->product_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-primary btn-sm  update-object">Sell Reports</a>';
+            } elseif (is_seller_user()) {
+                $upbutton = '<a href="#" onclick="updatePopup(' . $prd->id . ', \'' . addslashes($prd->name) . '\', ' . $popup_sell_price . ', ' . $prd->purchase_price . ', ' . $livestock . ')" data-object-id="' . $pid . '" class="btn btn-danger btn-sm  update-object">Unupdated</a>';
             }
             $row[] = '<a href="#" data-object-id="' . $pid . '" class="btn btn-success btn-sm  view-object"><span class="fa fa-eye"></span> ' . $this->lang->line('View') . ' </a> ' . $upbutton;
         }
@@ -1913,6 +1922,14 @@ public function filter_over() {
     if (!$product) {
         echo json_encode(['status' => 'error', 'message' => 'Product not found.']);
         return;
+    }
+
+    if (is_seller_user()) {
+        $seller_id = (int)$this->session->userdata('user_id');
+        if ((int)$product['seller_id'] !== $seller_id) {
+            echo json_encode(['status' => 'error', 'message' => 'You are not allowed to update this product.']);
+            return;
+        }
     }
 
     $variants = $this->Products_model->get_all_active_variants($product_id);

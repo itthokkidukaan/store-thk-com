@@ -1,73 +1,92 @@
 {
-    "pro_input_image": "uploads\/media\/2026\/fresh-red-apple-stockcake.jpg",
+    "edit_product_id": "1840",
+    "seller_id": "29",
+    "pro_input_image": "uploads\/media\/2026\/istockphoto-184276818-612x612.jpg",
     "product_type": "variable_product",
     "variant_stock_status": "0",
     "variant_stock_level_type": "variable_level",
     "simple_product_stock_status": "",
     "pro_input_name": "Apple",
-    "category_id": "198",
-    "total_allowed_quantity": "-3",
-    "total_required_quantity": "0",
-    "purchaseprice": "100",
+    "category_id": "245",
+    "total_allowed_quantity": "100",
+    "total_required_quantity": "80",
+    "purchaseprice": "100.00",
     "purchase_price_per": "Kilogram",
-    "products_id": "",
+    "products_id": "1840",
     "row_id": [
-        "0"
+        "211",
+        "212"
     ],
     "printname": [
-        "Apple"
+        "Apple",
+        "AppleSecond"
     ],
     "article": [
-        "10001"
+        "A101",
+        "A102"
     ],
     "hpnumber": [
-        "10001"
+        "1001",
+        "1002"
     ],
     "attr": [
+        "Kilogram",
         "Kilogram"
     ],
     "uom": [
-        "1Kg"
+        "1Kg",
+        "2Kg"
     ],
     "variants_ids": [
-        "1"
+        "1",
+        "2"
     ],
     "edit_variant_id": [
-        ""
+        "2505",
+        "2506"
     ],
     "purchase_price": [
-        "100"
+        "100.00",
+        "200.00"
     ],
     "packing_price": [
-        "0"
+        "10.00",
+        "10.00"
     ],
     "margin_type": [
+        "Fixed",
         "Fixed"
     ],
     "margin_percent": [
+        "10",
         "0"
     ],
     "disc_percent": [
+        "10",
         "0"
     ],
     "variant_price": [
-        "100"
+        "120",
+        "210"
     ],
     "variant_special_price": [
-        "100"
+        "109",
+        "210"
     ],
     "variant_sku": [
-        "apple-1Kg-8Z7ZW6"
+        "apple-1Kg-0B7AP4",
+        "apple-2Kg-E5EF9G"
     ],
     "variant_total_stock": [
-        "100"
+        "10",
+        "10"
     ],
     "variant_level_stock_status": [
+        "1",
         "1"
     ],
-    "seller_id": "834",
     "short_description": "Apple",
-    "pro_input_tax": "2",
+    "pro_input_tax": "1",
     "indicator": "0",
     "minimum_order_quantity": "1",
     "quantity_step_size": "1",
@@ -77,12 +96,12 @@
     "cancelable_till": "received",
     "video_type": "",
     "video": "",
-    "product_type__ignore": "",
+    "product_type__ignore": "variable_product",
     "simple_product_stock_status__ignore": "",
-    "variant_stock_level_type__ignore": "",
-    "variant_stock_status__ignore": "",
+    "variant_stock_level_type__ignore": "variant_level",
+    "variant_stock_status__ignore": "0",
     "sku_variant_type": "",
-    "total_stock_variant_type": "100",
+    "total_stock_variant_type": "20",
     "variant_status": "1",
     "pro_input_description": "",
     "attribute_values": "",
