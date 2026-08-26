@@ -271,29 +271,37 @@
 
         foreach ($products as $row) {
             $cols = 4;
-        
-  $variant = $this->Products_model->get_first_variant($row['id']);
-    if (!$variant) {
-        echo json_encode(['status' => 'error', 'message' => 'No active variant found.']);
-        return;
-    }
 
-    // Extract unit from attribute_values
-    $unit = $this->Products_model->get_unit_from_attribute($variant['attribute_value_ids']);
+            $variants = $this->Products_model->get_all_active_variants($row['id']);
 
-         
+            if (empty($variants)) {
+                echo '<tr class="item' . $flag . '">  <td>' . $n . '</td>
+                                <td>' . $row['catname']  . '</td>
+                                <td>' . $row['name']  . '</td>
+                                <td>-</td> ';
+                $fill = !$fill;
+                $n++;
+                continue;
+            }
 
-	
-            echo '<tr class="item' . $flag . '">  <td>' . $n . '</td>
-                            <td>' . $row['catname']  . '</td>
-                            <td>' . $row['name']  . '</td>
-                        
-                            <td>' . floatval($row['product_price']).' Per '.$unit   . '</td> ';
-         
-          
-        
-            $fill = !$fill;
-            $n++;
+            foreach ($variants as $variant) {
+                // Extract unit from attribute_values
+                $unit = $this->Products_model->get_unit_from_attribute($variant['attribute_value_ids']);
+
+                // Same fallback used on the product edit page: use special_price when set, else price
+                $price = (!empty($variant['special_price']) && floatval($variant['special_price']) > 0)
+                    ? $variant['special_price']
+                    : $variant['price'];
+
+                echo '<tr class="item' . $flag . '">  <td>' . $n . '</td>
+                                <td>' . $row['catname']  . '</td>
+                                <td>' . $row['name']  . '</td>
+
+                                <td>' . number_format((float)$price, 2) . ' Per ' . $unit . '</td> ';
+
+                $fill = !$fill;
+                $n++;
+            }
         }
 
      
