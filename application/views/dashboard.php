@@ -1301,6 +1301,8 @@ $(document).ready(function(){
 
 <script type="text/javascript">
     $(window).on("load", function () {
+
+    
         $('#recent-buyers').perfectScrollbar({
             wheelPropagation: true
         });
