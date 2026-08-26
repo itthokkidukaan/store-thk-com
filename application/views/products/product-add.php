@@ -1124,6 +1124,9 @@
                                                 detailsCol.html(html);
                                                 row.attr('data-variant-key', nextKey);
                                                 newPrice(detailsCol.find('input[name="purchase_price[]"]')[0]); // Trigger price calculation after rendering
+                                                if (typeof upatevarprice === 'function') {
+                                                    upatevarprice(); // Rescale purchase price for this variant's quantity/unit (e.g. 2 kg = 2x the base purchase price)
+                                                }
                                             }
                                         }
 

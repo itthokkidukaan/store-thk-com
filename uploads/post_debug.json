@@ -1,92 +1,110 @@
 {
-    "edit_product_id": "1840",
+    "edit_product_id": "1843",
     "seller_id": "29",
-    "pro_input_image": "uploads\/media\/2026\/istockphoto-184276818-612x612.jpg",
+    "pro_input_image": "uploads\/media\/2026\/download_(2)1.jpeg",
     "product_type": "variable_product",
     "variant_stock_status": "0",
     "variant_stock_level_type": "variable_level",
     "simple_product_stock_status": "",
-    "pro_input_name": "Apple",
-    "category_id": "245",
-    "total_allowed_quantity": "100",
-    "total_required_quantity": "80",
-    "purchaseprice": "100.00",
+    "pro_input_name": "patato",
+    "category_id": "198",
+    "total_allowed_quantity": "10",
+    "total_required_quantity": "0",
+    "purchaseprice": "120.00",
     "purchase_price_per": "Kilogram",
-    "products_id": "1840",
+    "products_id": "1843",
     "row_id": [
-        "211",
-        "212"
+        "218",
+        "219",
+        "220"
     ],
     "printname": [
-        "Apple",
-        "AppleSecond"
+        "patato",
+        "patato",
+        "patato"
     ],
     "article": [
-        "A101",
-        "A102"
+        "100001",
+        "100002",
+        "100003"
     ],
     "hpnumber": [
-        "1001",
-        "1002"
+        "100002",
+        "100002",
+        "100003"
     ],
     "attr": [
+        "Kilogram",
         "Kilogram",
         "Kilogram"
     ],
     "uom": [
         "1Kg",
-        "2Kg"
+        "10Kg",
+        ".250"
     ],
     "variants_ids": [
         "1",
-        "2"
+        "33",
+        "94"
     ],
     "edit_variant_id": [
-        "2505",
-        "2506"
+        "2511",
+        "2512",
+        "2513"
     ],
     "purchase_price": [
-        "200",
-        "200.00"
+        "120.00",
+        "1200.00",
+        "30.00"
     ],
     "packing_price": [
-        "10.00",
-        "10.00"
+        "0.00",
+        "0.00",
+        "0.00"
     ],
     "margin_type": [
         "Fixed",
+        "Percentage",
         "Fixed"
     ],
     "margin_percent": [
         "10",
+        "12",
         "0"
     ],
     "disc_percent": [
+        "0",
         "10",
         "0"
     ],
     "variant_price": [
-        "220",
-        "200"
+        "130",
+        "1344",
+        "30"
     ],
     "variant_special_price": [
-        "199",
-        "200"
+        "130",
+        "1209.6",
+        "30"
     ],
     "variant_sku": [
-        "apple-1Kg-0B7AP4",
-        "apple-2Kg-E5EF9G"
+        "patato-1Kg-83CL2R",
+        "patato-10Kg-FNRBTM",
+        "patato-.250-4QRX8F"
     ],
     "variant_total_stock": [
-        "10",
-        "10"
+        "900",
+        "900",
+        "900"
     ],
     "variant_level_stock_status": [
         "1",
+        "1",
         "1"
     ],
-    "short_description": "Apple",
-    "pro_input_tax": "1",
+    "short_description": "patato",
+    "pro_input_tax": "2",
     "indicator": "0",
     "minimum_order_quantity": "1",
     "quantity_step_size": "1",
@@ -101,7 +119,7 @@
     "variant_stock_level_type__ignore": "variant_level",
     "variant_stock_status__ignore": "0",
     "sku_variant_type": "",
-    "total_stock_variant_type": "20",
+    "total_stock_variant_type": "2700",
     "variant_status": "1",
     "pro_input_description": "",
     "attribute_values": "",
