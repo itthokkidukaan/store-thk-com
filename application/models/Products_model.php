@@ -1182,6 +1182,29 @@ FROM products $whr");
         return '';
     }
 
+    // Full variant label from `attribute_values` (keeps the quantity, e.g. "500 gm", "1 Kg")
+    public function get_variant_name($attribute_value_ids)
+    {
+        if (empty($attribute_value_ids)) {
+            return '';
+        }
+
+        $ids = explode(',', $attribute_value_ids);
+        $this->db->select('value');
+        $this->db->where_in('id', $ids);
+        $query = $this->db->get('attribute_values');
+        $attribute_values = $query->result_array();
+
+        $values = array();
+        foreach ($attribute_values as $attribute) {
+            if ($attribute['value'] !== '') {
+                $values[] = $attribute['value'];
+            }
+        }
+
+        return implode(' / ', $values);
+    }
+
     // Update products table
     public function update_product($product_id, $data)
     {

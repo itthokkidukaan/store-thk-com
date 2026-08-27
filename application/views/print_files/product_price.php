@@ -250,10 +250,8 @@
 
 			<td>
                 Product
-            </td>      
+            </td>
 
-			
-			
             <td>
                Today Price
             </td>
@@ -285,8 +283,8 @@
             }
 
             foreach ($variants as $variant) {
-                // Extract unit from attribute_values
-                $unit = $this->Products_model->get_unit_from_attribute($variant['attribute_value_ids']);
+                // Full variant label, e.g. "500 gm" / "1 Kg"
+                $variant_name = $this->Products_model->get_variant_name($variant['attribute_value_ids']);
 
                 // Same fallback used on the product edit page: use special_price when set, else price
                 $price = (!empty($variant['special_price']) && floatval($variant['special_price']) > 0)
@@ -296,8 +294,7 @@
                 echo '<tr class="item' . $flag . '">  <td>' . $n . '</td>
                                 <td>' . $row['catname']  . '</td>
                                 <td>' . $row['name']  . '</td>
-
-                                <td>' . number_format((float)$price, 2) . ' Per ' . $unit . '</td> ';
+                                <td>' . number_format((float)$price, 2) . ' Rs For ' . $variant_name . '</td> ';
 
                 $fill = !$fill;
                 $n++;
