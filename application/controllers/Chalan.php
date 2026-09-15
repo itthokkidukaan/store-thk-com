@@ -1173,7 +1173,7 @@ public function print_single_barcode()
         ];
     }
 
-    $this->pdf_barcode->generate($data, "product_{$product_id}_barcodes.pdf");
+    $this->pdf_barcode->generate_one_per_page($data, "product_{$product_id}_barcodes.pdf");
 }
 
 
