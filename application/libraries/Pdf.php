@@ -13,7 +13,9 @@ class Pdf
     {
         require_once APPPATH . 'third_party/vendor/autoload.php';
         try {
-            $mpdf = new \Mpdf\Mpdf(['tempDir' => $this->temppath,'mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 5, 'margin_right' => 5, 'margin_top' => 5, 'margin_bottom' => 4]);
+            $defaults = ['tempDir' => $this->temppath, 'mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 5, 'margin_right' => 5, 'margin_top' => 5, 'margin_bottom' => 4];
+            $config = is_array($param) ? array_merge($defaults, $param) : $defaults;
+            $mpdf = new \Mpdf\Mpdf($config);
             $mpdf->autoScriptToLang = true;
             $mpdf->autoLangToFont = true;
             return $mpdf;

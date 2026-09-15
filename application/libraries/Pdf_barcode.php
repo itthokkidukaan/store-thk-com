@@ -10,12 +10,13 @@ class Pdf_barcode
         $this->CI->load->library('pdf'); // mPDF wrapper
     }
 
-    public function generate($items, $filename = 'labels.pdf')
+    public function generate($items, $filename = 'labels.pdf', $columns = 2)
     {
+        $columns = ($columns == 1) ? 1 : 2;
         $currency = (string)$this->CI->config->item('currency');
         $mpdf = $this->CI->pdf->load([
             'mode'          => 'utf-8',
-            'format'        => [100, 50],   // 2 stickers (50mm left + 50mm right)
+            'format'        => [50 * $columns, 50],   // one 50mm sticker per column
             'margin_left'   => 0,
             'margin_right'  => 0,
             'margin_top'    => 0,
@@ -44,7 +45,7 @@ class Pdf_barcode
         $count = 0;
 
         foreach ($items as $item) {
-            if ($count % 2 == 0) $html .= '<tr>'; // हर 2 stickers के बाद नई row
+            if ($count % $columns == 0) $html .= '<tr>'; // हर $columns stickers के बाद नई row
             $name = isset($item['name']) ? (string)$item['name'] : '';
             $code = isset($item['code']) ? (string)$item['code'] : '';
             $uom = isset($item['uom']) ? trim((string)$item['uom']) : '';
@@ -83,12 +84,12 @@ class Pdf_barcode
                         </div>
                        </td>";
 
-            if ($count % 2 == 1) $html .= '</tr>'; 
+            if ($count % $columns == $columns - 1) $html .= '</tr>';
             $count++;
         }
 
-        if ($count % 2 != 0) {
-            $html .= '<td></td></tr>';
+        if ($count % $columns != 0) {
+            $html .= str_repeat('<td></td>', $columns - ($count % $columns)) . '</tr>';
         }
 
         $html .= '</table>';
