@@ -24,6 +24,11 @@ jobs:
 
             echo "Fix permissions..."
             chown -R demostorethokkid:demostorethokkid .
+            find . -type d -exec chmod 755 {} \;
+            find . -type f -exec chmod 644 {} \;
+
+            echo "Restoring SELinux context (best effort, won't fail if SELinux is disabled or restorecon is unavailable)..."
+            sudo restorecon -Rv /home/demostorethokkid/public_html 2>/dev/null || true
 
             echo "Busting PHP OPcache (touch all PHP files so timestamp-based invalidation picks up the changes)..."
             find . -name "*.php" -exec touch {} \;
