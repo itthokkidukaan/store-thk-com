@@ -15,7 +15,7 @@ class Pdf_barcode
         $currency = (string)$this->CI->config->item('currency');
         $mpdf = $this->CI->pdf->load([
             'mode'          => 'utf-8',
-            'format'        => [100, 50],   // 2 stickers (50mm left + 50mm right)
+            'format'        => [50, 50],
             'margin_left'   => 0,
             'margin_right'  => 0,
             'margin_top'    => 0,
@@ -23,8 +23,7 @@ class Pdf_barcode
         ]);
 
         $html = '<style>
-            table { border-collapse: collapse; width: 100%; }
-            td {
+            .label {
                 width: 50mm;
                 height: 50mm;
                 border: 0.4mm solid #000;
@@ -32,66 +31,46 @@ class Pdf_barcode
                 vertical-align: middle;
                 padding: 2mm;
                 font-size: 8pt;
+                page-break-after: always;
+                box-sizing: border-box;
             }
-            .product-name { font-weight: bold; font-size: 9pt; margin-bottom: 1mm; }
-            .barcode { margin: 1mm 0; }
-            .code { font-size: 8pt; margin: 1mm 0; }
-            .meta { display: inline-block; font-size: 7pt; line-height: 1.2; text-align: left; margin-top: 1mm; }
+            .label:last-child { page-break-after: auto; }
+            .company { font-size: 9.5pt; font-weight: bold; margin-bottom: 0.5mm; }
+            .barcode { margin: 0.5mm 0; }
+            .product-line { font-size: 8pt; font-weight: bold; margin-bottom: 1mm; color: #333; }
+            .meta { display: inline-block; font-size: 8pt; line-height: 1.2; text-align: left; margin-top: 1mm; }
             .meta div { margin: 0.5mm 0; }
         </style>';
 
-        $html .= '<table>';
-        $count = 0;
-
         foreach ($items as $item) {
-            if ($count % 2 == 0) $html .= '<tr>'; // हर 2 stickers के बाद नई row
             $name = isset($item['name']) ? (string)$item['name'] : '';
             $code = isset($item['code']) ? (string)$item['code'] : '';
             $uom = isset($item['uom']) ? trim((string)$item['uom']) : '';
             $weight = isset($item['weight']) ? trim((string)$item['weight']) : '';
             $net = $uom !== '' ? $uom : $weight;
-            
+
             $price = isset($item['price']) ? (float)$item['price'] : 0.0;
             $seller = isset($item['seller']) ? trim((string)$item['seller']) : '';
-            
+
             $price_text = $price > 0 ? htmlspecialchars($currency) . ' ' . number_format($price, 2) : 'N/A';
             $net_text = ($net !== '' && $net !== '0' && $net !== '0.00') ? htmlspecialchars($net) : 'N/A';
-            $seller_display = ($seller !== '') ? htmlspecialchars($seller) : 'THOK KI DUKAN';
+            $seller_display = ($seller !== '') ? htmlspecialchars($seller) : 'THOK KI DUKAN VEGETABLE STORE';
 
-            $html .= "<td>
-                        <!-- 1. Company Name -->
+            $html .= "<div class='label'>
                         <div style='font-size: 9.5pt; font-weight: bold; margin-bottom: 0.5mm;'>THOK KI DUKAN</div>
-                        
-                        <!-- 2. Barcode -->
                         <div class='barcode' style='margin: 0.5mm 0;'>
                           <barcode code='".htmlspecialchars($code, ENT_QUOTES, 'UTF-8')."' type='C128B' size='0.85' height='0.9' />
                         </div>
-                        
-                        <!-- 3. Product SKU, Variant Name -->
                         <div style='font-size: 8pt; font-weight: bold; margin-bottom: 1mm; color: #333;'>
                           ".htmlspecialchars($code).", ".htmlspecialchars($name)." (".$net_text.")
                         </div>
-                        
-                        <!-- Meta Details -->
                         <div class='meta' style='font-size: 8pt; text-align: left;'>
-                          <!-- 4. Price -->
                           <div style='margin-bottom: 0.5mm;'><strong>Price:</strong> ".$price_text."</div>
-                          <!-- 5. Seller -->
                           <div style='margin-bottom: 0.5mm;'><strong>Seller:</strong> ".$seller_display."</div>
-                          <!-- 6. FSSAI No (Fsi Code) -->
                           <div style='margin-bottom: 0.5mm;'><strong>FSSAI No-</strong>22624030001319</div>
                         </div>
-                       </td>";
-
-            if ($count % 2 == 1) $html .= '</tr>'; 
-            $count++;
+                      </div>";
         }
-
-        if ($count % 2 != 0) {
-            $html .= '<td></td></tr>';
-        }
-
-        $html .= '</table>';
 
         $mpdf->WriteHTML($html);
         $mpdf->Output($filename,'I');
