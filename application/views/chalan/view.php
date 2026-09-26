@@ -813,7 +813,10 @@ $(document).on('click', '.printSingleBtn', function() {
     $('#productId').val($(this).data('pid'));
     $('#productName').text($(this).data('name'));
     $('#productNameInput').val($(this).data('name'));
-    $('#productQty').val($(this).data('qty'));
+    var popupQty = $(this).data('qty');
+    popupQty = (popupQty !== undefined && popupQty !== null && popupQty !== '') ? parseInt(popupQty, 10) : 1;
+    if (isNaN(popupQty) || popupQty < 1) popupQty = 1;
+    $('#productQty').val(popupQty);
     $('#productPriceInput').val($(this).data('price'));
     $('#productUomInput').val($(this).data('uom'));
     $('#productSellerInput').val($(this).data('seller'));
