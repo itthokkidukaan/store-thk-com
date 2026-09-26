@@ -13,7 +13,12 @@ class Pdf
     {
         require_once APPPATH . 'third_party/vendor/autoload.php';
         try {
-            $mpdf = new \Mpdf\Mpdf(['tempDir' => $this->temppath,'mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 5, 'margin_right' => 5, 'margin_top' => 5, 'margin_bottom' => 4]);
+            $config = ['tempDir' => $this->temppath,'mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 5, 'margin_right' => 5, 'margin_top' => 5, 'margin_bottom' => 4];
+            if (is_array($param)) {
+                $config = array_merge($config, $param);
+                $config['tempDir'] = $this->temppath;
+            }
+            $mpdf = new \Mpdf\Mpdf($config);
             $mpdf->autoScriptToLang = true;
             $mpdf->autoLangToFont = true;
             return $mpdf;

@@ -7,7 +7,7 @@ class Pdf_barcode
     public function __construct()
     {
         $this->CI =& get_instance();
-        $this->CI->load->library('pdf'); // mPDF wrapper
+        $this->CI->load->library('pdf');
     }
 
     public function generate($items, $filename = 'labels.pdf')
@@ -23,35 +23,27 @@ class Pdf_barcode
         ]);
 
         $html = '<style>
-            table { border-collapse: collapse; width: 100%; }
+            @page { margin: 0; }
+            table { border-collapse: collapse; width: 100%; table-layout: fixed; }
             tr { page-break-after: always; }
             tr:last-child { page-break-after: auto; }
             td {
                 width: 50mm;
                 height: 50mm;
-                border: 0.4mm solid #000;
+                border: none;
                 text-align: center;
-                vertical-align: middle;
-                padding: 0;
-                font-size: 8pt;
-                position: relative;
+                vertical-align: top;
+                padding: 2mm 2mm 2mm 2mm;
+                margin: 0;
                 overflow: hidden;
             }
-            .cell-inner {
-                width: 50mm;
-                height: 50mm;
-                transform: rotate(90deg);
-                transform-origin: center center;
-                text-align: center;
-                padding: 2mm;
-                box-sizing: border-box;
-                font-size: 8pt;
-            }
-            .company { font-size: 9.5pt; font-weight: bold; margin-bottom: 0.5mm; }
-            .barcode { margin: 0.5mm 0; }
-            .product-line { font-size: 8pt; font-weight: bold; margin-bottom: 1mm; color: #333; }
-            .meta { display: inline-block; font-size: 8pt; line-height: 1.2; text-align: left; margin-top: 1mm; }
-            .meta div { margin: 0.5mm 0; }
+            .label-store { font-size: 9pt; font-weight: bold; margin: 0 0 1mm 0; line-height: 1; }
+            .label-barcode { margin: 1mm 0; }
+            .label-code { font-size: 8pt; font-weight: bold; margin: 0.5mm 0 0.5mm 0; line-height: 1; letter-spacing: 0.5px; }
+            .label-name { font-size: 7.5pt; margin: 0.3mm 0; line-height: 1.1; }
+            .label-meta { font-size: 6.5pt; text-align: left; margin-top: 0.8mm; line-height: 1.25; }
+            .label-meta div { margin: 0.2mm 0; }
+            .label-meta strong { font-weight: bold; }
         </style>';
 
         $html .= '<table>';
@@ -73,22 +65,19 @@ class Pdf_barcode
             $net_text = ($net !== '' && $net !== '0' && $net !== '0.00') ? htmlspecialchars($net) : 'N/A';
             $seller_display = ($seller !== '') ? htmlspecialchars($seller) : 'THOK KI DUKAN VEGETABLE STORE';
 
-            $html .= "<td>
-                        <div class='cell-inner'>
-                          <div style='font-size: 9.5pt; font-weight: bold; margin-bottom: 0.5mm;'>THOK KI DUKAN</div>
-                          <div class='barcode' style='margin: 0.5mm 0;'>
-                            <barcode code='".htmlspecialchars($code, ENT_QUOTES, 'UTF-8')."' type='C128B' size='0.85' height='0.9' />
-                          </div>
-                          <div style='font-size: 8pt; font-weight: bold; margin-bottom: 1mm; color: #333;'>
-                            ".htmlspecialchars($code).", ".htmlspecialchars($name)." (".$net_text.")
-                          </div>
-                          <div class='meta' style='font-size: 8pt; text-align: left;'>
-                            <div style='margin-bottom: 0.5mm;'><strong>Price:</strong> ".$price_text."</div>
-                            <div style='margin-bottom: 0.5mm;'><strong>Seller:</strong> ".$seller_display."</div>
-                            <div style='margin-bottom: 0.5mm;'><strong>FSSAI No-</strong>22624030001319</div>
-                          </div>
-                        </div>
-                       </td>";
+            $html .= "<td>";
+            $html .= "<div class='label-store'>THOK KI DUKAN</div>";
+            $html .= "<div class='label-barcode'>";
+            $html .= "<barcode code='".htmlspecialchars($code, ENT_QUOTES, 'UTF-8')."' type='C128B' size='1.0' height='14' />";
+            $html .= "</div>";
+            $html .= "<div class='label-code'>".htmlspecialchars($code)."</div>";
+            $html .= "<div class='label-name'>".htmlspecialchars($name)." (".$net_text.")</div>";
+            $html .= "<div class='label-meta'>";
+            $html .= "<div><strong>Price:</strong> ".$price_text."</div>";
+            $html .= "<div><strong>Seller:</strong> ".$seller_display."</div>";
+            $html .= "<div><strong>FSSAI No:</strong> 22624030001319</div>";
+            $html .= "</div>";
+            $html .= "</td>";
 
             if ($count % 2 == 1) $html .= '</tr>';
             $count++;
