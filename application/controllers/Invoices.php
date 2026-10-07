@@ -1648,10 +1648,12 @@ $seller_id = isset($product_variant['seller_id']) ? $product_variant['seller_id'
 
         $bill_date = datefordatabase($invoicedate);
         $bill_due_date = datefordatabase($invocieduedate);
-        $data = array( 'mobile' => $mobile, 'date_added' => $bill_date, 'updated_at' => date('Y-m-d H:i:s'), 'invoiceduedate' => $bill_due_date, 'final_total' => $subtotal, 'total_payable' => $subtotal, 'shipping' => $shipping, 'ship_tax' => $shipping_tax, 'ship_tax_type' => $ship_taxtype, 'discount_rate' => $disc_val, 'total' => $total, 'notes' => $notes, 'user_id' => $customer_id,  'taxstatus' => $tax, 'discstatus' => $discstatus, 'format_discount' => $discountFormat, 'refer' => $refer, 'term' => $pterms,  'loc' => $this->aauth->get_user()->loc, 'orderdone_by' => 'Manual','status' => 'due');
-        $this->db->set($data);
+        $data = array( 'mobile' => $mobile, 'date_added' => $bill_date, 'invoiceduedate' => $bill_due_date, 'final_total' => $subtotal, 'total_payable' => $subtotal, 'shipping' => $shipping, 'ship_tax' => $shipping_tax, 'ship_tax_type' => $ship_taxtype, 'discount_rate' => $disc_val, 'total' => $total, 'notes' => $notes, 'user_id' => $customer_id,  'taxstatus' => $tax, 'discstatus' => $discstatus, 'format_discount' => $discountFormat, 'refer' => $refer, 'term' => $pterms,  'loc' => $this->aauth->get_user()->loc, 'orderdone_by' => 'Manual','status' => 'due');
+        // orders.updated_at is optional: only write it when the column exists
+        if ($this->db->field_exists('updated_at', 'orders')) {
+            $data['updated_at'] = date('Y-m-d H:i:s');
+        }
         $this->db->where('id', $iid);
-
 
         if ($this->db->update('orders', $data)) {
             //Product Data
@@ -1769,8 +1771,11 @@ if($old_product_qty[$key] !== $new_qty){
             }
 
         } else {
-                if($transok)   echo json_encode(array('status' => 'Error', 'message' =>
-                "Please add at least one product in invoice"));
+                if ($transok) {
+                $db_err = $this->db->error();
+                echo json_encode(array('status' => 'Error', 'message' =>
+                    !empty($db_err['message']) ? 'Invoice could not be updated: ' . $db_err['message'] : "Please add at least one product in invoice"));
+            }
             $transok = false;
 
         }

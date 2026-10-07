@@ -478,9 +478,11 @@ document.getElementById("submit-mydata").addEventListener("click", function (e) 
     bindPriceChangeEvents(); // Ensure any newly added rows are bound
     const isValid = validateAllPricesBeforeSubmit();
 
+    // Rows below purchase price stay highlighted in red, but saving is allowed after confirmation
     if (!isValid) {
-        alert("❌ Error: Product price cannot be less than purchase price.");
-        return false;
+        if (!confirm("⚠️ Warning: one or more products are priced below their purchase price (marked in red).\n\nPress OK to save the invoice anyway, or Cancel to change the rates.")) {
+            return false;
+        }
     }
 
     // Custom submit logic
